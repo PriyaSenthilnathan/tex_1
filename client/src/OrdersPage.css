@@ -1,0 +1,81 @@
+/* OrdersPage.css */
+
+/* Main container for the orders page */
+.orders-page-container {
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  /* Heading for the orders page */
+  .orders-page-container h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 2rem;
+    color: #333;
+  }
+  
+  /* Container for the list of orders */
+  .orders-list {
+    list-style-type: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap; /* Allows items to wrap to the next row */
+    justify-content: flex-start; /* Align items to the start of each row */
+    gap: 20px; /* Space between items */
+  }
+  
+  /* Individual order item */
+  .order-item {
+    background: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 20px;
+    width: calc(50% - 20px); /* Adjust width to display two items per row */
+    box-sizing: border-box; /* Ensures padding is included in the width calculation */
+    display: flex;
+    flex-direction: column; /* Keeps the content stacked inside each order item */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    min-height: 300px; /* Set a minimum height for consistency */
+  }
+  
+  .order-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  /* Order item heading (e.g., Fabric Name) */
+  .order-item h3 {
+    margin: 0 0 10px;
+    font-size: 1.2rem;
+    color: #333;
+  }
+  
+  /* Paragraphs inside the order item */
+  .order-item p {
+    margin: 5px 0;
+    font-size: 1rem;
+    color: #555;
+    flex-grow: 1; /* Ensures paragraphs take up remaining space */
+  }
+  
+  /* Bold text for labels (e.g., Order ID, User Name) */
+  .order-item p strong {
+    font-weight: bold;
+    color: #333;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 1024px) {
+    .order-item {
+      width: calc(50% - 20px); /* Two items per row on tablets */
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .order-item {
+      width: 100%; /* One item per row on mobile */
+    }
+  }

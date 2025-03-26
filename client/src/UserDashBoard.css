@@ -1,0 +1,150 @@
+/* UserDashBoard.css */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f9f9f9; /* Light background for a clean look */
+    height: 100%;
+    overflow-x: hidden;
+  }
+  
+  /* Home Container */
+  .home-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Full viewport height */
+  }
+  
+  /* Navbar Styles */
+  .navbar {
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.8); /* Semi-transparent black */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    color: white;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    height: 70px;
+  }
+  
+  .website-name {
+    font-size: 28px;
+    font-weight: bold;
+    color: #f1c40f; /* Gold accent for the brand name */
+  }
+  
+  .website-name::before {
+    content: ""; /* Remove the emoji */
+    display: inline-block;
+    width: 80px; /* Adjust the width of the logo */
+    height: 70px; /* Adjust the height of the logo */
+    background-image: url('./assets/saras.png'); /* Add the path to your logo */
+    background-size: cover; /* Ensure the image fits within the dimensions */
+    background-position: center; /* Center the image */
+    margin-right: 8px;
+    vertical-align: middle; /* Align the logo with the text */
+  }
+  
+  /* Navigation Links */
+  .nav-links {
+    display: flex;
+    gap: 20px; /* Space between links */
+  }
+  
+  .nav-links a {
+    color: white;
+    text-decoration: none;
+    padding: 10px 15px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    border-radius: 5px; /* Rounded corners for links */
+  }
+  
+  .nav-links a:hover {
+    background-color: rgb(110, 110, 109); /* Grey hover effect */
+    color: #2c3e50; /* Dark text on hover */
+  }
+  
+  /* Logout Icon */
+  .logout-icon-div {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #4dd8ff; /* Light blue color for the icon */
+    font-size: 24px;
+    position: relative;
+  }
+  
+  .logout-icon-div:hover {
+    color: #ccb400; /* Gold color on hover */
+  }
+  
+  /* Add "Logout" text on hover */
+  .logout-icon-div:hover::after {
+    content: "Logout";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .logout-icon-div:hover::after {
+    opacity: 1;
+  }
+  
+  /* Content Section */
+  .content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 150px 20px 50px; /* Adjusted for navbar */
+    text-align: center;
+    color: #333;
+    background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80'); /* Fabric-themed background image */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    flex-grow: 1;
+  }
+  
+  .content h1 {
+    font-size: 48px;
+    margin-bottom: 20px;
+    font-weight: 700;
+    color: #ffffff; /* White text for contrast */
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* Shadow for readability */
+  }
+  
+  .description {
+    font-size: 20px;
+    max-width: 800px;
+    width: 90%;
+    line-height: 1.8;
+    color: #ffffff; /* White text for contrast */
+    margin: 0 auto;
+    padding: 20px;
+    background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent black background */
+    border-radius: 10px; /* Rounded corners for the text box */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Subtle shadow */
+  }

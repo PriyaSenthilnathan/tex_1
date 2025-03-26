@@ -1,0 +1,131 @@
+/* Search Bar with Progress Bar */
+.search-bar-container {
+    position: relative;
+    width: 100%;
+    max-width: 910px; /* Matches the required search bar width */
+    margin: 20px auto; /* Centers the search bar */
+  }
+  
+  .search-bar {
+    width: 100%;
+    padding: 15px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    outline: none;
+    background: linear-gradient(to right, #4caf50 0%, #d5d8d5 0%, #fff 0%);
+    background-size: 0% 100%;
+    background-repeat: no-repeat;
+    transition: background-size 0.4s ease-in-out;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .search-bar:focus {
+    border-color: #232523;
+    background-size: 100% 100%;
+  }
+  
+  .search-icon {
+    position: absolute;
+    top: 50%;
+    right: 15px; /* Adjust based on the padding */
+    transform: translateY(-50%);
+    font-size: 20px;
+    color: #242222;
+    pointer-events: none;
+  }
+  
+  .autocomplete-suggestions {
+    border: 1px solid #ccc;
+    max-height: 150px;
+    overflow-y: auto;
+    background-color: white;
+    position: absolute;
+    z-index: 1000;
+    width: 100%;
+    margin-top: 5px;
+    border-radius: 4px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .suggestion-item {
+    padding: 10px;
+    cursor: pointer;
+  }
+  
+  .suggestion-item:hover {
+    background-color: #f0f0f0;
+  }
+  
+  /* Fabric List Styles */
+  .fabric-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 25px;
+    justify-content: flex-start; /* Align items to the start of each row */
+    margin-top: 20px;
+  }
+  
+  .fabric-card {
+    background-color: #f9f9f9;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 15px;
+    width: 400px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+    text-align: center;
+  }
+  
+  .fabric-card:hover {
+    transform: scale(1.05);
+  }
+  
+  .fabric-image {
+    width: 80%;
+    height: auto;
+    margin-bottom: 15px;
+    border-radius: 5px;
+  }
+  
+  .fabric-card h3 {
+    font-size: 1.2em;
+    margin-bottom: 8px;
+  }
+  
+  .fabric-card p {
+    color: #555;
+    margin-bottom: 5px;
+  }
+  
+  /* No Fabrics Message */
+  .no-fabrics-message {
+    text-align: center;
+    width: 100%;
+    margin-top: 50px;
+  }
+  
+  .no-fabrics-message img {
+    width: 150px;
+    height: auto;
+    margin-bottom: 20px;
+  }
+  
+  .no-fabrics-message p {
+    font-size: 18px;
+    color: #666;
+  }
+  
+  .microphone-icon {
+    position: absolute;
+    top: 55%;
+    right: 50px; /* Align icon at the right edge of the container */
+    transform: translateY(-50%);
+    font-size: 22px;
+    color: #8a8787;
+    cursor: pointer;
+  }
+  
+  .microphone-icon:hover {
+    color: #0f0000;
+  }

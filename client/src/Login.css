@@ -1,0 +1,137 @@
+/* src/login.css */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background-color: #f4f4f4;
+}
+
+/* Page background */
+.page-background {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f0f0f0;
+  position: relative;
+}
+
+/* Close button style */
+.page-background span {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  cursor: pointer;
+  font-size: 30px;
+  color: #2c3e50; /* Dark blue for consistency */
+  z-index: 10;
+  transition: color 0.3s ease;
+}
+
+.page-background span:hover {
+  color: #f1c40f; /* Gold on hover */
+}
+
+/* Form container */
+.login-container {
+  background-color: white;
+  padding: 40px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+}
+
+.login-container h1 {
+  margin-bottom: 20px;
+  color: #2c3e50; /* Dark blue for headings */
+  font-size: 24px;
+}
+
+.login-container input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 16px;
+  transition: border-color 0.3s;
+}
+
+.login-container input:focus {
+  border-color: #f1c40f; /* Gold for focus */
+  outline: none;
+}
+
+.login-container button {
+  width: 100%;
+  padding: 12px;
+  background-color: rgba(143, 197, 82, 0.77); /* Green for buttons */
+  color: #2c3e50; /* Dark blue text */
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.login-container button:hover {
+  background-color: #f1c40f
+}
+
+.login-container button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Google Sign-In Button */
+.google-sign-in {
+  background-color: #ffffff;
+  color: #2c3e50;
+  border: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.google-sign-in:hover {
+  background-color: #f9f9f9;
+}
+
+.google-sign-in img {
+  width: 35px;
+  height: 35px;
+}
+
+/* Links */
+.login-container p {
+  margin-top: 15px;
+  color: #666;
+}
+
+.login-container button + button {
+  color: rgb(146, 182, 248); /* Light blue for links */
+  background: none;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.login-container button + button:hover {
+  text-decoration: underline;
+}
+
+/* Error message style */
+.error-message {
+  color: red;
+  margin-bottom: 10px;
+  font-size: 14px;
+}

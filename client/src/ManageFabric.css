@@ -1,0 +1,216 @@
+/* General Reset and Layout */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background-color: #f4f4f4;
+  background-image: url('');
+}
+
+/* Home Container */
+.home-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #fff;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* Navbar */
+.navbar {
+  background-color: #2c3e50; /* Dark blue */
+  color: white;
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 1;
+}
+
+/* Navigation Links */
+.nav-links {
+  display: flex;
+  align-items: center;
+}
+
+.nav-links a {
+  color: white;
+  text-decoration: none;
+  margin: 0 15px;
+  font-size: 16px;
+  transition: color 0.3s ease;
+}
+
+.nav-links a:hover {
+  color: #f1c40f; /* Gold on hover */
+}
+
+/* Manage Fabrics Section */
+.manage-fabrics {
+  display: flex;
+  flex-direction: column;
+  padding: 80px 20px 20px; /* Adjust padding for fixed navbar */
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Heading */
+.manage-fabrics h1 {
+  text-align: center;
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: #2c3e50; /* Dark blue */
+}
+
+/* Form Container */
+.form-container {
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto 20px;
+}
+
+.form-container input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+}
+
+.form-container input:focus {
+  border-color: #f1c40f; /* Gold for focus */
+  outline: none;
+}
+
+.form-container button {
+  width: auto; /* Smaller width for the button */
+  padding: 10px 20px;
+  background-color: rgba(143, 197, 82, 0.77); /* Light gold */
+  color: #2c3e50; /* Dark blue text */
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-top: 10px;
+}
+
+.form-container button:hover {
+  background-color: #e0b30f; /* Darker gold on hover */
+}
+
+.form-container button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Cancel Button */
+.form-container button.cancel-button {
+  background-color: #e74c3c; /* Red for cancel button */
+  color: white;
+  margin-left: 10px;
+}
+
+.form-container button.cancel-button:hover {
+  background-color: #c0392b; /* Darker red on hover */
+}
+
+/* Fabrics List Section */
+.fabrics-list {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.fabrics-list h2 {
+  font-size: 22px;
+  color: #2c3e50; /* Dark blue */
+  margin-bottom: 20px;
+}
+
+.fabrics-list ul {
+  list-style-type: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  width: 100%;
+}
+
+.fabrics-list li {
+  background-color: #fff;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.fabrics-list li:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.fabrics-list h3 {
+  font-size: 18px;
+  color: #2c3e50; /* Dark blue */
+  margin-bottom: 5px;
+}
+
+.fabrics-list p {
+  font-size: 14px;
+  color: #666;
+}
+
+.fabrics-list img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 5px;
+  margin-top: 10px;
+}
+
+.fabrics-list button {
+  background-color: #2c3e50; /* Dark blue */
+  color: white;
+  padding: 8px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.fabrics-list button:hover {
+  background-color: #f1c40f; /* Gold on hover */
+}
+
+/* Logout Icon Styling */
+.logout-icon-div {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  margin-left: 20px;
+}
+
+.logout-icon-div:hover {
+  color: #f1c40f; /* Gold on hover */
+}

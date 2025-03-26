@@ -1,0 +1,36 @@
+.logout-icon-div {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #4dd8ff; /* Customize the icon color */
+  font-size: 24px; /* Adjust the icon size */
+  position: relative; /* Required for positioning the hover text */
+}
+
+/* Add "Logout" text on hover */
+.logout-icon-div:hover::after {
+  content: "Logout"; /* Text to display */
+  position: absolute;
+  top: 100%; /* Position below the icon */
+  left: 50%;
+  transform: translateX(-50%); /* Center the text */
+  background-color: #333; /* Background color for the text */
+  color: #fff; /* Text color */
+  padding: 5px 10px; /* Padding around the text */
+  border-radius: 5px; /* Rounded corners */
+  font-size: 14px; /* Text size */
+  white-space: nowrap; /* Prevent text from wrapping */
+  opacity: 0; /* Initially hidden */
+  transition: opacity 0.3s ease; /* Smooth fade-in effect */
+}
+
+/* Show the "Logout" text on hover */
+.logout-icon-div:hover::after {
+  opacity: 1; /* Make the text visible */
+}
+
+/* Change icon color on hover */
+.logout-icon-div:hover {
+  color: #ccb400; /* Change color on hover */
+}

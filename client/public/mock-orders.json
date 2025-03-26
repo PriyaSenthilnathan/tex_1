@@ -1,0 +1,26 @@
+[
+    {
+      "_id": "1",
+      "fabricName": "Cotton Fabric",
+      "userName": "John Doe",
+      "userEmail": "john.doe@example.com",
+      "userAddress": "123 Main St, Chennai",
+      "userContact": "9876543210",
+      "quantity": 25,
+      "totalPrice": 1000,
+      "paymentMethod": "Credit Card",
+      "orderTime": "2023-10-15T12:34:56Z"
+    },
+    {
+      "_id": "2",
+      "fabricName": "Silk Fabric",
+      "userName": "Jane Smith",
+      "userEmail": "jane.smith@example.com",
+      "userAddress": "456 Elm St, Bangalore",
+      "userContact": "9876543211",
+      "quantity": 30,
+      "totalPrice": 1500,
+      "paymentMethod": "PayPal",
+      "orderTime": "2023-10-16T10:22:45Z"
+    }
+  ]
