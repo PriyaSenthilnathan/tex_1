@@ -40,12 +40,13 @@ const Register = () => {
     setError(''); // Clear any previous errors
 
     try {
-      const response = await axios.post('https://lms-4n6b.onrender.com/api/register', {
+      const response = await axios.post('http://localhost:5000/register', {
         username,
         email,
         password,
+      }, {
+        withCredentials: true
       });
-
       console.log('Server Response:', response.data);
       alert('Registration successful!');
       navigate('/'); // Redirect to homepage

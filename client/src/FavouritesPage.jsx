@@ -1,93 +1,130 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
+import { FaSignOutAlt, FaHeart, FaShoppingCart } from "react-icons/fa";
 import "./FavouritesPage.css";
-import { FaSignOutAlt } from "react-icons/fa"; // Import logout icon
-import "./LogoutButton.css"; // Optional: Add specific styles for the div
+import "./LogoutButton.css";
 
 const FavoritesPage = () => {
   const [favorites, setFavorites] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [currentFabric, setCurrentFabric] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [userDetails, setUserDetails] = useState({
     name: "",
     address: "",
     contact: "",
-    quantity: "",
-    paymentMethod: "",
+    quantity: "1",
+    paymentMethod: "Cash on Delivery",
   });
 
   const userEmail = localStorage.getItem("userEmail");
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (userEmail) {
-      axios
-        .get(`https://your-api-endpoint.com/favorites?email=${userEmail}`) // Update API endpoint
-        .then((response) => {
-          if (Array.isArray(response.data)) {
-            setFavorites(response.data);
-          } else {
-            setFavorites([]);
-            console.error("Unexpected data format:", response.data);
-          }
-        })
-        .catch((error) => {
-          console.error("Error fetching favorites:", error);
-          setFavorites([]); // Default to empty array if there's an error
+    const fetchFavorites = async () => {
+      if (!userEmail) {
+        setFavorites([]);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const response = await axios.get(`http://localhost:5000/favorites`, {
+          params: { email: userEmail }
         });
-    }
+        
+        setFavorites(response.data.map(fav => fav.fabricId));
+        setError(null);
+      } catch (error) {
+        console.error("Error fetching favorites:", error);
+        setError("Failed to load favorites. Please try again.");
+        setFavorites([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFavorites();
   }, [userEmail]);
 
-  const handleBuy = (fabric) => {
+  const handleRemoveFavorite = async (fabricId) => {
+    try {
+      await axios.delete("http://localhost:5000/favorites", {
+        params: { email: userEmail, fabricId }
+      });
+      
+      setFavorites(prev => prev.filter(f => f._id !== fabricId));
+    } catch (error) {
+      console.error("Error removing favorite:", error);
+      alert("Failed to remove from favorites");
+    }
+  };
+
+  const handleOrder = (fabric) => {
     setCurrentFabric(fabric);
     setShowModal(true);
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setUserDetails((prevDetails) => ({ ...prevDetails, [name]: value }));
+    setUserDetails(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const totalPrice = currentFabric?.price * userDetails.quantity;
-    const payload = {
-      fabricId: currentFabric._id,
-      fabricName: currentFabric.name,
-      userEmail,
-      userName: userDetails.name,
-      userAddress: userDetails.address,
-      userContact: userDetails.contact,
-      quantity: userDetails.quantity,
-      paymentMethod: userDetails.paymentMethod,
-      totalPrice,
-    };
+    try {
+      const totalPrice = currentFabric.price * userDetails.quantity;
+      const payload = {
+        fabricId: currentFabric._id,
+        fabricName: currentFabric.name,
+        userEmail,
+        userName: userDetails.name,
+        userAddress: userDetails.address,
+        userContact: userDetails.contact,
+        quantity: userDetails.quantity,
+        paymentMethod: userDetails.paymentMethod,
+        totalPrice,
+      };
 
-    axios
-      .post("https://your-api-endpoint.com/orders", payload) // Update API endpoint
-      .then(() => {
-        alert("Order placed successfully!");
-        setShowModal(false);
-        setUserDetails({
-          name: "",
-          address: "",
-          contact: "",
-          quantity: "",
-          paymentMethod: "",
-        });
-      })
-      .catch((error) => console.error("Error placing order:", error));
+      await axios.post("http://localhost:5000/orders", payload);
+      alert("Order placed successfully!");
+      setShowModal(false);
+      setUserDetails({
+        name: "",
+        address: "",
+        contact: "",
+        quantity: "1",
+        paymentMethod: "Cash on Delivery",
+      });
+    } catch (error) {
+      console.error("Error placing order:", error);
+      alert("Failed to place order. Please try again.");
+    }
   };
 
   const handleLogout = () => {
-    const confirmLogout = window.confirm("Are you sure you want to logout?");
-    if (confirmLogout) {
+    if (window.confirm("Are you sure you want to logout?")) {
       localStorage.removeItem("userEmail");
       localStorage.removeItem("isAdmin");
       navigate("/login");
     }
   };
+
+  if (loading) {
+    return (
+      <div className="loading-spinner">
+        <div className="spinner"></div>
+        <p>Loading your favorites...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div className="error-message">{error}</div>;
+  }
 
   return (
     <div className="home-container">
@@ -96,7 +133,7 @@ const FavoritesPage = () => {
         <nav className="nav-links">
           <Link to="/UserDashboard">Home</Link>
           <Link to="/search-fabrics">Search Fabrics</Link>
-          <Link to="/favorites">Favourites</Link>
+          <Link to="/favorites" className="active">Favourites</Link>
           <Link to="/cart">Cart</Link>
           <div className="logout-icon-div" onClick={handleLogout}>
             <FaSignOutAlt />
@@ -105,158 +142,196 @@ const FavoritesPage = () => {
       </div>
 
       <div className="favorites-page-container">
-        <h2>Your Favorites</h2>
-        <div className="fabrics-grid">
-          {favorites.length === 0 ? (
-            <p>No favorites added yet.</p>
-          ) : (
-            favorites.map((fabric, index) =>
-              fabric ? (
-                <div key={fabric._id || index} className="fabric-item">
-                  <h3>{fabric.name || "Unnamed Fabric"}</h3>
-                  <p>
-                    <strong>Material:</strong> {fabric.material || "Unknown"}
-                  </p>
-                  <p>
-                    <strong>Color:</strong> {fabric.color || "Unknown"}
-                  </p>
-                  <p>
-                    <strong>Price:</strong> ₹{fabric.price || "Unknown"} per meter
-                  </p>
-                  <p>
-                    <strong>Description:</strong> {fabric.description || "No description available"}
-                  </p>
-                  <img
-                    src={fabric.imageUrl || "default-image-url.jpg"}
-                    alt={fabric.name || "Fabric image"}
-                    className="fabric-image"
-                  />
-                  <button onClick={() => handleBuy(fabric)} className="buy-button">
-                    Buy
+        <h2>Your Favourites</h2>
+        
+        {favorites.length === 0 ? (
+          <div className="no-favorites">
+            <p>You haven't added any favorites yet.</p>
+            <Link to="/search-fabrics" className="browse-link">
+              Browse Fabrics
+            </Link>
+          </div>
+        ) : (
+          <div className="fabrics-grid">
+            {favorites.map((fabric) => (
+              <div key={fabric._id} className="fabric-card">
+                <img
+                  src={fabric.imageUrl || "/default-fabric.jpg"}
+                  alt={fabric.name}
+                  className="fabric-image"
+                />
+                <div className="fabric-info">
+                  <h3>{fabric.name}</h3>
+                  <p><strong>Color:</strong> {fabric.color}</p>
+                  <p><strong>Price:</strong> ₹{fabric.price} per meter</p>
+                  <p className="fabric-description"><strong>Description:</strong>{fabric.description}</p>
+                </div>
+                <div className="action-buttons">
+                  <button 
+                    onClick={() => handleRemoveFavorite(fabric._id)} 
+                    className="remove-button"
+                  >
+                     Remove
+                  </button>
+                  <button 
+                    onClick={() => handleOrder(fabric)} 
+                    className="order-button"
+                  >
+                     Order
                   </button>
                 </div>
-              ) : (
-                <div key={index} className="fabric-item">
-                  <p>Invalid fabric data</p>
-                </div>
-              )
-            )
-          )}
-        </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {showModal && currentFabric && (
-        <div className="modal">
-          <div className="modal-content">
-            <h2>Order Details</h2>
-            <form onSubmit={handleSubmit} className="order-form">
-              <div className="form-group">
-                <label htmlFor="name">Name:</label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={userDetails.name}
-                  onChange={handleInputChange}
-                  placeholder="Enter your full name"
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="address">Address:</label>
-                <textarea
-                  id="address"
-                  name="address"
-                  value={userDetails.address}
-                  onChange={handleInputChange}
-                  placeholder="Enter your complete address"
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="contact">Contact:</label>
-                <input
-                  type="text"
-                  id="contact"
-                  name="contact"
-                  value={userDetails.contact}
-                  onChange={handleInputChange}
-                  placeholder="Enter your contact number"
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="quantity">Quantity (in meters):</label>
-                <input
-                  type="number"
-                  id="quantity"
-                  name="quantity"
-                  value={userDetails.quantity}
-                  onChange={handleInputChange}
-                  min="1"
-                  max="100"
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Total Price:</label>
-                <p>₹{currentFabric.price * (userDetails.quantity || 0)}</p>
-              </div>
-              <div className="form-group">
-                <label>Payment Method:</label>
-                <div>
-                  <label>
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="Credit Card"
-                      checked={userDetails.paymentMethod === "Credit Card"}
-                      onChange={handleInputChange}
-                    />
-                    Credit Card
-                  </label>
-                </div>
-                <div>
-                  <label>
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="Debit Card"
-                      checked={userDetails.paymentMethod === "Debit Card"}
-                      onChange={handleInputChange}
-                    />
-                    Debit Card
-                  </label>
-                </div>
-                <div>
-                  <label>
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="Cash on Delivery"
-                      checked={userDetails.paymentMethod === "Cash on Delivery"}
-                      onChange={handleInputChange}
-                    />
-                    Cash on Delivery
-                  </label>
-                </div>
-              </div>
-              <div className="form-buttons">
-                <button type="submit" className="submit-button">
-                  Place Order
-                </button>
-                <button
-                  type="button"
-                  className="cancel-button"
-                  onClick={() => setShowModal(false)}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
+  <div className="modal-overlay">
+    <div className="modal-container">
+      <div className="modal-header">
+        <h3>Order {currentFabric.name}</h3>
+        <div className="fabric-details">
+          <span className="fabric-color" style={{ backgroundColor: currentFabric.color.toLowerCase() }}></span>
+          <span>Color: {currentFabric.color}</span>
+          <span>₹{currentFabric.price} per meter</span>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="order-form">
+        <div className="form-section">
+          <h4 className="section-title">Shipping Details</h4>
+          <div className="form-group">
+            <label>
+              <input
+                type="text"
+                name="name"
+                placeholder="Full Name"
+                value={userDetails.name}
+                onChange={handleInputChange}
+                required
+              />
+            </label>
+          </div>
+
+          <div className="form-group">
+            <label>
+              <textarea
+                name="address"
+                placeholder="Complete Address"
+                value={userDetails.address}
+                onChange={handleInputChange}
+                required
+              />
+            </label>
+          </div>
+
+          <div className="form-group">
+  <label>Contact Number</label>
+  <div className="phone-input-container">
+    <span className="country-code">+91</span>
+    <input
+      type="tel"
+      name="contact"
+      placeholder="9876543210"
+      value={userDetails.contact}
+      onChange={handleInputChange}
+      required
+      pattern="[0-9]{10}"
+      title="Please enter a 10-digit phone number"
+    />
+  </div>
+</div>
+        </div>
+
+        <div className="form-section">
+          <h4 className="section-title">Order Summary</h4>
+          <div className="quantity-selector">
+            <label>Quantity (meters)</label>
+            <div className="quantity-controls">
+  <button 
+    type="button" 
+    onClick={() => setUserDetails({...userDetails, quantity: Math.max(1, userDetails.quantity - 1)})}
+    className="quantity-btn"
+  >
+    −
+  </button>
+  <input
+    type="number"
+    name="quantity"
+    min="1"
+    value={userDetails.quantity}
+    onChange={(e) => {
+      const value = e.target.value;
+      if (value === '' || /^[1-9]\d*$/.test(value)) {
+        setUserDetails({
+          ...userDetails,
+          quantity: value === '' ? 1 : parseInt(value)
+        });
+      }
+    }}
+    className="quantity-input"
+    style={{ width: `${Math.max(2, userDetails.quantity.toString().length) * 10 + 20}px` }}
+  />
+  <button 
+    type="button" 
+    onClick={() => setUserDetails({...userDetails, quantity: (parseInt(userDetails.quantity) + 1)})}
+    className="quantity-btn"
+  >
+    +
+  </button>
+</div>
+          </div>
+
+          <div className="price-summary">
+            <div className="price-row">
+              <span>Price per meter</span>
+              <span>₹{currentFabric.price}</span>
+            </div>
+            <div className="price-row">
+              <span>Quantity</span>
+              <span>{userDetails.quantity} m</span>
+            </div>
+            <div className="price-row total">
+              <span>Total Amount</span>
+              <span>₹{currentFabric.price * userDetails.quantity}</span>
+            </div>
           </div>
         </div>
-      )}
+
+        <div className="form-section">
+          <h4 className="section-title">Payment Method</h4>
+          <div className="payment-options">
+            {["Cash on Delivery", "Credit Card", "Debit Card"].map(method => (
+              <label key={method} className={`payment-option ${userDetails.paymentMethod === method ? 'selected' : ''}`}>
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value={method}
+                  checked={userDetails.paymentMethod === method}
+                  onChange={handleInputChange}
+                />
+                <div className="payment-icon">
+                  {method === "Cash on Delivery" ? "💰" : method === "Credit Card" ? "💳" : "🏦"}
+                </div>
+                <span>{method}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div className="form-actions">
+          <button type="button" className="cancel-btn" onClick={() => setShowModal(false)}>
+            Cancel
+          </button>
+          <button type="submit" className="submit-btn">
+            Place Order - ₹{currentFabric.price * userDetails.quantity}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
     </div>
   );
 };

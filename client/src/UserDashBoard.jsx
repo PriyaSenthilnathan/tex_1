@@ -32,7 +32,7 @@ const UserDashBoard = () => {
         </nav>
       </div>
       <div className="content">
-        <h1>Welcome to SaraswathiTex</h1>
+        <h1>SaraswathiTex - Your Fabric Your Style</h1>
         <p className="description">
           Your one-stop destination for premium fabrics. Explore our vast
           collection of textiles, from luxurious silks to durable cottons.

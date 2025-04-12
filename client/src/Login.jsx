@@ -22,12 +22,13 @@ const Login = () => {
     setError(''); // Clear previous errors
 
     try {
-      const response = await axios.post('https://lms-4n6b.onrender.com/api/login', {
+      const response = await axios.post('http://localhost:5000/login', {
         email,
         password,
+      }, {
+        withCredentials: true // Important for sessions/cookies
       });
       localStorage.setItem('userEmail', email);
-
       console.log('Login successful!', response.data);
       if (email === 'admin@gmail.com' && password === 'admin@123') {
         navigate('/adminDashboard');

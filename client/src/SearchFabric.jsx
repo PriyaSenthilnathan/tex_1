@@ -3,32 +3,75 @@ import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { FaHeart, FaCartPlus, FaSearch, FaMicrophone, FaMicrophoneSlash } from "react-icons/fa";
 import "./SearchFabric.css";
-import './LogoutButton.css'; // Optional: Add specific styles for the div
-import { FaSignOutAlt } from "react-icons/fa"; // Import logout icon
+import './LogoutButton.css';
+import { FaSignOutAlt } from "react-icons/fa";
 
 const SearchFabric = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [fabrics, setFabrics] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [isListening, setIsListening] = useState(false);
+  const [error, setError] = useState(null);
+  const [activeSearchTerm, setActiveSearchTerm] = useState("");
   const userEmail = localStorage.getItem("userEmail");
   const navigate = useNavigate();
 
   useEffect(() => {
-    setLoading(true);
-    axios
-      .get("https://your-api-endpoint.com/fabrics") // Update API endpoint
-      .then((response) => {
+    const fetchInitialFabrics = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/fabrics");
         setFabrics(response.data);
+        setError(null);
+      } catch (error) {
+        console.error("Error fetching initial fabrics:", error);
+        setError("Failed to load fabrics. Please try again later.");
+      } finally {
         setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching fabrics:", error);
-        setLoading(false);
-        alert("Failed to load fabrics. Please try again later.");
-      });
+      }
+    };
+
+    fetchInitialFabrics();
   }, []);
+
+  useEffect(() => {
+    if (activeSearchTerm === "") {
+      setLoading(true);
+      axios.get("http://localhost:5000/fabrics")
+        .then(response => {
+          setFabrics(response.data);
+          setError(null);
+        })
+        .catch(error => {
+          console.error("Error fetching fabrics:", error);
+          setError("Failed to load fabrics. Please try again.");
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+      return;
+    }
+
+    setLoading(true);
+    axios.get("http://localhost:5000/fabrics/search", {
+      params: { q: activeSearchTerm }
+    })
+    .then((response) => {
+      setFabrics(response.data);
+      setError(null);
+    })
+    .catch((error) => {
+      console.error("Error searching fabrics:", error);
+      setError("Failed to search fabrics. Please try again.");
+    })
+    .finally(() => {
+      setLoading(false);
+    });
+  }, [activeSearchTerm]);
+
+  const handleSearch = () => {
+    setActiveSearchTerm(searchTerm);
+  };
 
   const onInputChange = (e) => {
     const value = e.target.value;
@@ -37,14 +80,18 @@ const SearchFabric = () => {
     if (value.length > 0) {
       const filteredSuggestions = fabrics.filter(
         (fabric) =>
-          (fabric.name &&
-            fabric.name.toLowerCase().includes(value.toLowerCase())) ||
-          (fabric.color &&
-            fabric.color.toLowerCase().includes(value.toLowerCase()))
+          (fabric.name && fabric.name.toLowerCase().includes(value.toLowerCase())) ||
+          (fabric.color && fabric.color.toLowerCase().includes(value.toLowerCase()))
       );
       setSuggestions(filteredSuggestions.slice(0, 5));
     } else {
       setSuggestions([]);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
     }
   };
 
@@ -67,6 +114,7 @@ const SearchFabric = () => {
       recognition.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
         setSearchTerm(transcript);
+        setActiveSearchTerm(transcript);
 
         const filteredSuggestions = fabrics.filter(
           (fabric) =>
@@ -93,53 +141,50 @@ const SearchFabric = () => {
     }
   };
 
-  const filteredFabrics = fabrics.filter(
-    (fabric) =>
-      (fabric.name &&
-        fabric.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (fabric.color &&
-        fabric.color.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
-  const handleAddFavorite = (fabricId) => {
+  const handleAddFavorite = async (fabricId) => {
     if (!userEmail) {
       alert("Please log in to add fabrics to favorites.");
+      navigate('/login');
       return;
     }
-    axios
-      .post("https://your-api-endpoint.com/favorites", { email: userEmail, fabricId }) // Update API endpoint
-      .then((response) => {
-        alert(response.data.message || "Fabric added to favorites!");
-      })
-      .catch((error) => {
-        console.error("Error adding to favorites:", error);
-        alert(error.response?.data.message || "Failed to add to favorites.");
+    
+    try {
+      const response = await axios.post("http://localhost:5000/favorites", { 
+        email: userEmail, 
+        fabricId 
       });
+      
+      alert(response.data.message || "Fabric added to favorites!");
+    } catch (error) {
+      console.error("Error adding to favorites:", error);
+      alert(error.response?.data.message || "Failed to add to favorites.");
+    }
   };
 
-  const handleAddToCart = (fabric) => {
+  const handleAddToCart = async (fabric) => {
     if (!userEmail) {
       alert("Please log in to add items to your cart.");
+      navigate('/login');
       return;
     }
-
-    const payload = {
-      email: userEmail,
-      fabricId: fabric.id || fabric._id,
-      fabricName: fabric.name,
-      imageUrl: fabric.imageUrl,
-      price: fabric.price,
-    };
-
-    axios
-      .post("https://your-api-endpoint.com/cart", payload) // Update API endpoint
-      .then((response) => {
-        alert(response.data.message || "Item added to cart successfully!");
-      })
-      .catch((error) => {
-        console.error("Error adding to cart:", error);
-        alert(error.response?.data.message || "Failed to add to cart.");
+  
+    try {
+      const response = await axios.post("http://localhost:5000/cart", {
+        email: userEmail,
+        fabricId: fabric._id,
+        fabricName: fabric.name,
+        imageUrl: fabric.imageUrl,
+        color: fabric.color,
+        price: fabric.price,
+        description: fabric.description,
+        quantity: 1 // Default quantity
       });
+      
+      alert(response.data.message || "Item added to cart successfully!");
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      alert(error.response?.data.message || "Failed to add to cart.");
+    }
   };
 
   const handleLogout = () => {
@@ -157,7 +202,7 @@ const SearchFabric = () => {
         <div className="website-name">SaraswathiTex</div>
         <nav className="nav-links">
           <Link to="/UserDashboard">Home</Link>
-          <Link to="/searchfabrics">Search Fabrics</Link>
+          <Link to="/search-fabrics">Search Fabrics</Link>
           <Link to="/favorites">Favourites</Link>
           <Link to="/cart">Cart</Link>
           <div className="logout-icon-div" onClick={handleLogout}>
@@ -167,12 +212,13 @@ const SearchFabric = () => {
       </div>
 
       <div className="search-bar-container">
-        <FaSearch className="search-icon" />
+        <FaSearch className="search-icon" onClick={handleSearch} />
         <input
           type="text"
           placeholder="Search by name or color"
           value={searchTerm}
           onChange={onInputChange}
+          onKeyPress={handleKeyPress}
           className="search-bar"
         />
         <div
@@ -189,6 +235,7 @@ const SearchFabric = () => {
                 key={suggestion._id}
                 onClick={() => {
                   setSearchTerm(suggestion.name || suggestion.color);
+                  setActiveSearchTerm(suggestion.name || suggestion.color);
                   setSuggestions([]);
                 }}
                 className="suggestion-item"
@@ -200,13 +247,18 @@ const SearchFabric = () => {
         )}
       </div>
 
+      {error && <div className="error-message">{error}</div>}
+
       <div className="fabric-list">
         {loading ? (
-          <p>Loading fabrics...</p>
-        ) : filteredFabrics.length === 0 ? (
-          <p>No fabrics found.</p>
+          <div className="loading-spinner">
+            <div className="spinner"></div>
+            <p>Loading fabrics...</p>
+          </div>
+        ) : fabrics.length === 0 ? (
+          <p className="no-fabrics">No fabrics found matching your search.</p>
         ) : (
-          filteredFabrics.map((fabric) => (
+          fabrics.map((fabric) => (
             <div key={fabric._id} className="fabric-card">
               {fabric.imageUrl && (
                 <img
@@ -215,30 +267,25 @@ const SearchFabric = () => {
                   className="fabric-image"
                 />
               )}
-              <h3>{fabric.name}</h3>
-              <p>
-                <strong>Material:</strong> {fabric.material}
-              </p>
-              <p>
-                <strong>Color:</strong> {fabric.color}
-              </p>
-              <p>
-                <strong>Price:</strong> ₹{fabric.price} per meter
-              </p>
-              <p>
-                <strong>Description:</strong> {fabric.description}
-              </p>
-              <div className="icon-container">
-                <FaHeart
-                  className="fav-icon"
-                  title="Add to Favorites"
+              <div className="fabric-details">
+                <h3>{fabric.name}</h3>
+                <p><strong>Color:</strong> {fabric.color}</p>
+                <p><strong>Price:</strong> ₹{fabric.price} per meter</p>
+                <p><strong>Description:</strong> {fabric.description}</p>
+              </div>
+              <div className="action-buttons">
+                <button 
+                  className="favorite-button"
                   onClick={() => handleAddFavorite(fabric._id)}
-                />
-                <FaCartPlus
-                  className="cart-icon"
-                  title="Add to Cart"
+                >
+                  <FaHeart className="fav-icon" />
+                </button>
+                <button 
+                  className="cart-button"
                   onClick={() => handleAddToCart(fabric)}
-                />
+                >
+                  <FaCartPlus className="cart-icon" />
+                </button>
               </div>
             </div>
           ))

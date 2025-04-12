@@ -36,7 +36,7 @@ const AdminDashboard = () => {
 
       {/* Main Content */}
       <div className="content">
-        <h1>Weaving Excellence into Every Thread</h1>
+        <h1>SaraswathiTex - Your Fabric Your Style</h1>
         <p className="con">
           Welcome to SaraswathiTex, where tradition meets innovation. As an admin, you can manage our premium collection of fabrics, oversee orders, and ensure our customers receive the finest textiles. Explore the dashboard to manage products, view orders, and more.
         </p>

@@ -1,299 +1,326 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
-import "./CartPage.css";
-import { FaSignOutAlt } from "react-icons/fa"; // Import logout icon
-import "./LogoutButton.css"; // Optional: Add specific styles for the div
+import { FaSignOutAlt, FaTrash, FaShoppingCart, FaMinus, FaPlus } from "react-icons/fa";
+import "./cartPage.css";
 
-const CartPage = () => {
-  const [cartItems, setCartItems] = useState([]);
-  const [showModal, setShowModal] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(null);
-  const [currentFabric, setCurrentFabric] = useState(null);
+const cartPage = () => {
+    const [cartItems, setCartItems] = useState([]);
+    const [showModal, setShowModal] = useState(false);
+    const [currentFabric, setCurrentFabric] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [updatingItem, setUpdatingItem] = useState(null);
+    const [userDetails, setUserDetails] = useState({
+        name: "",
+        address: "",
+        contact: "",
+        quantity: "1",
+        paymentMethod: "Cash on Delivery",
+    });
 
-  const [userDetails, setUserDetails] = useState({
-    name: "",
-    address: "",
-    contact: "",
-    quantity: 1,
-    paymentMethod: "",
-  });
+    const userEmail = localStorage.getItem("userEmail");
+    const navigate = useNavigate();
 
-  const userEmail = localStorage.getItem("userEmail");
-  const navigate = useNavigate();
+    useEffect(() => {
+        const fetchCartItems = async () => {
+            if (!userEmail) {
+                setCartItems([]);
+                setLoading(false);
+                return;
+            }
 
-  // Fetch the cart items when the page loads
-  useEffect(() => {
-    const fetchCartItems = async () => {
-      if (!userEmail) {
-        console.error("User email is not available.");
-        return;
-      }
+            try {
+                setLoading(true);
+                const response = await axios.get(`http://localhost:5000/cart`, {
+                    params: { email: userEmail }
+                });
+                setCartItems(response.data);
+                setError(null);
+            } catch (error) {
+                console.error("Error fetching cart items:", error);
+                setError("Failed to load cart items. Please try again.");
+                setCartItems([]);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-      try {
-        const response = await axios.get(
-          `https://your-api-endpoint.com/cart?email=${userEmail}` // Update API endpoint
+        fetchCartItems();
+    }, [userEmail]);
+
+    // Calculate cart summary values
+    const itemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+    const subtotal = cartItems.reduce((total, item) => total + (item.fabricId.price * item.quantity), 0);
+    const total = subtotal; // Add shipping/tax if needed
+
+    const handleRemoveFromCart = async (fabricId) => {
+        try {
+            await axios.delete("http://localhost:5000/cart", {
+                params: { email: userEmail, fabricId }
+            });
+            setCartItems(prev => prev.filter(item => item.fabricId._id !== fabricId));
+            alert("Item removed from cart");
+        } catch (error) {
+            console.error("Error removing from cart:", error);
+            alert("Failed to remove from cart");
+        }
+    };
+
+    const handleUpdateQuantity = async (fabricId, newQuantity) => {
+        // Validate input
+        if (isNaN(newQuantity)) newQuantity = 1;
+        if (newQuantity < 1) newQuantity = 1;
+
+        setUpdatingItem(fabricId);
+
+        try {
+            const response = await axios.put("http://localhost:5000/cart/update-quantity", {
+                email: userEmail,
+                fabricId,
+                quantity: newQuantity
+            });
+
+            if (response.data.success) {
+                setCartItems(prev => prev.map(item =>
+                    item.fabricId._id === fabricId ? { ...item, quantity: newQuantity } : item
+                ));
+            } else {
+                throw new Error(response.data.message || "Failed to update quantity");
+            }
+        } catch (error) {
+            console.error("Error updating quantity:", error);
+            alert(error.response?.data?.message || "Failed to update quantity");
+        } finally {
+            setUpdatingItem(null);
+        }
+    };
+    const handleOrder = (fabric) => {
+        setCurrentFabric(fabric);
+        setUserDetails(prev => ({
+            ...prev,
+            quantity: fabric.quantity.toString()
+        }));
+        setShowModal(true);
+    };
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setUserDetails(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const totalPrice = currentFabric.fabricId.price * userDetails.quantity;
+            const payload = {
+                fabricId: currentFabric.fabricId._id,
+                fabricName: currentFabric.fabricId.name,
+                userEmail,
+                userName: userDetails.name,
+                userAddress: userDetails.address,
+                userContact: userDetails.contact,
+                quantity: userDetails.quantity,
+                paymentMethod: userDetails.paymentMethod,
+                totalPrice,
+            };
+
+            await axios.post("http://localhost:5000/orders", payload);
+
+            // Remove the ordered item from cart
+            await axios.delete("http://localhost:5000/cart", {
+                params: { email: userEmail, fabricId: currentFabric.fabricId._id }
+            });
+
+            alert("Order placed successfully!");
+            setShowModal(false);
+            setUserDetails({
+                name: "",
+                address: "",
+                contact: "",
+                quantity: "1",
+                paymentMethod: "Cash on Delivery",
+            });
+
+            // Refresh cart items
+            const response = await axios.get(`http://localhost:5000/cart`, {
+                params: { email: userEmail }
+            });
+            setCartItems(response.data);
+        } catch (error) {
+            console.error("Error placing order:", error);
+            alert("Failed to place order. Please try again.");
+        }
+    };
+
+    const handleLogout = () => {
+        if (window.confirm("Are you sure you want to logout?")) {
+            localStorage.removeItem("userEmail");
+            localStorage.removeItem("isAdmin");
+            navigate("/login");
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="loading-spinner">
+                <div className="spinner"></div>
+                <p>Loading your cart...</p>
+            </div>
         );
-        console.log("Cart items fetched:", response.data);
-        setCartItems(response.data); // Set the cart items to state
-      } catch (error) {
-        console.error("Error fetching cart items:", error);
-      }
-    };
-
-    fetchCartItems(); // Fetch the items when the component mounts or userEmail changes
-  }, [currentFabric, userEmail]);
-
-  const handleBuy = (fabric) => {
-    console.log("Selected fabric:", fabric); // Verify the fabric object
-    setCurrentFabric(fabric); // Store the whole fabric object, not just the _id
-    setShowModal(true); // Show modal
-  };
-
-  const deleteFabric = async (fabricName) => {
-    if (!fabricName) {
-      console.error("Invalid fabric name:", fabricName);
-      return alert("Failed to delete. Fabric name is invalid.");
     }
 
-    try {
-      const response = await axios.delete("https://your-api-endpoint.com/del", {
-        data: { fabricName, email: userEmail }, // Send the fabricName and userEmail in the request body
-      });
-
-      if (response.data.success) {
-        alert("Fabric removed from the cart successfully!");
-
-        // Update the state immediately to remove the fabric from the UI
-        setCartItems(cartItems.filter((item) => item.name !== fabricName));
-      } else {
-        alert("Failed to remove the fabric from the cart.");
-      }
-    } catch (error) {
-      console.error("Error deleting fabric:", error);
-      alert("An error occurred while removing the fabric.");
-    }
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setUserDetails({ ...userDetails, [name]: value });
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const totalPrice = currentFabric.price * userDetails.quantity; // Calculate total price
-    if (!currentFabric) {
-      console.error("Current fabric is not selected.");
-      alert("Please select a fabric before submitting the order.");
-      return;
+    if (error) {
+        return <div className="error-message">{error}</div>;
     }
 
-    const payload = {
-      fabricId: currentFabric?.fabricId || currentFabric?._id, // Check for fabricId first
-      fabricName: currentFabric?.name,
-      userEmail,
-      userName: userDetails.name,
-      userAddress: userDetails.address,
-      userContact: userDetails.contact,
-      quantity: userDetails.quantity,
-      paymentMethod: userDetails.paymentMethod,
-      totalPrice, // Log the total price
-    };
+    return (
+        <div className="home-container">
+            <div className="navbar">
+                <div className="website-name">SaraswathiTex</div>
+                <nav className="nav-links">
+                    <Link to="/UserDashboard">Home</Link>
+                    <Link to="/search-fabrics">Search Fabrics</Link>
+                    <Link to="/favorites">Favourites</Link>
+                    <Link to="/cart" className="active">Cart</Link>
+                    <div className="logout-icon-div" onClick={handleLogout}>
+                        <FaSignOutAlt />
+                    </div>
+                </nav>
+            </div>
 
-    console.log("Submitting order with payload:", payload); // Verify payload
+            <div className="cart-page-container">
+                <h2>Your Cart</h2>
 
-    axios
-      .post("https://your-api-endpoint.com/orders", payload) // Update API endpoint
-      .then(() => {
-        alert("Order placed successfully!");
-        setShowModal(false);
-        setUserDetails({ name: "", address: "", contact: "" });
-      })
-      .catch((error) => {
-        console.error("Error placing order:", error);
-      });
-  };
+                {cartItems.length === 0 ? (
+                    <div className="no-items">
+                        <p>Your cart is empty.</p>
+                        <Link to="/search-fabrics" className="browse-link">
+                            Browse Fabrics
+                        </Link>
+                    </div>
+                ) : (
+                    <>
+                        <div className="fabrics-grid">
+                            {cartItems.map((item) => (
+                                <div key={item.fabricId._id} className="fabric-card">
+                                    <img
+                                        src={item.fabricId.imageUrl ?
+                                            `http://localhost:5000/${item.fabricId.imageUrl}` : // Removed 'uploads/' if it's already in the path
+                                            "/default-fabric.jpg"
+                                        }
+                                        alt={item.fabricId.name}
+                                        className="fabric-image"
+                                        onError={(e) => {
+                                            e.target.onerror = null;
+                                            e.target.src = "/default-fabric.jpg";
+                                        }}
+                                    />
+                                    <div className="fabric-info">
+                                        <h3>{item.fabricId.name}</h3>
+                                        <p><strong>Color:</strong> {item.fabricId.color}</p>
+                                        <p><strong>Price:</strong> ₹{item.fabricId.price} per meter</p>
+                                        <p className="fabric-description">
+                                            <strong>Description:</strong> {item.fabricId.description}
+                                        </p>
+                                    </div>
+                                    <div className="quantity-controls">
+                                        <button
+                                            onClick={() => handleUpdateQuantity(item.fabricId._id, item.quantity - 1)}
+                                            disabled={item.quantity <= 1 || updatingItem === item.fabricId._id}
+                                            className="quantity-btn"
+                                        >
+                                            {updatingItem === item.fabricId._id && item.quantity === item.quantity ? '...' : <FaMinus />}
+                                        </button>
 
-  const handleLogout = () => {
-    const confirmLogout = window.confirm("Are you sure you want to logout?");
-    if (confirmLogout) {
-      localStorage.removeItem("userEmail");
-      localStorage.removeItem("isAdmin");
-      navigate("/login"); // Redirect to the login page
-    }
-  };
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            value={item.quantity}
+                                            onChange={(e) => {
+                                                const newValue = parseInt(e.target.value) || 1;
+                                                handleUpdateQuantity(item.fabricId._id, newValue);
+                                            }}
+                                            className="quantity-input"
+                                            disabled={updatingItem === item.fabricId._id}
+                                        />
 
-  return (
-    <div className="home-container">
-      <div className="navbar">
-        <div className="website-name">SaraswathiTex</div>
-        <nav className="nav-links">
-          <Link to="/UserDashboard">Home</Link>
-          <Link to="/searchfabrics">Search Fabrics</Link>
-          <Link to="/favorites">Favorites</Link>
-          <Link to="/cart">Cart</Link>
-          <div className="logout-icon-div" onClick={handleLogout}>
-            <FaSignOutAlt />
-          </div>
-        </nav>
-      </div>
+                                        <button
+                                            onClick={() => handleUpdateQuantity(item.fabricId._id, item.quantity + 1)}
+                                            disabled={updatingItem === item.fabricId._id}
+                                            className="quantity-btn"
+                                        >
+                                            {updatingItem === item.fabricId._id && item.quantity === item.quantity ? '...' : <FaPlus />}
+                                        </button>
+                                    </div>
+                                    <div className="action-buttons">
+                                        <button
+                                            onClick={() => handleRemoveFromCart(item.fabricId._id)}
+                                            className="remove-button"
+                                        >
+                                            <FaTrash /> Remove
+                                        </button>
+                                        <button
+                                            onClick={() => handleOrder(item)}
+                                            className="order-button"
+                                        >
+                                            <FaShoppingCart /> Order
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
 
-      <div className="cart-page-container">
-        <h2>Your Cart</h2>
-        <div className="fabrics-grid">
-          {cartItems.length === 0 ? (
-            <p>No items in cart.</p>
-          ) : (
-            cartItems.map((fabric) => (
-              <div key={fabric._id} className="fabric-item">
-                <h3>{fabric.name}</h3>
-                <p>
-                  <strong>Material:</strong> {fabric.material}
-                </p>
-                <p>
-                  <strong>Color:</strong> {fabric.color}
-                </p>
-                <p>
-                  <strong>Price:</strong> ₹{fabric.price} per meter
-                </p>
-                <p>
-                  <strong>Description:</strong> {fabric.description}
-                </p>
-                <img
-                  src={fabric.imageUrl}
-                  alt={fabric.name}
-                  className="fabric-image"
-                />
-                <button onClick={() => handleBuy(fabric)} className="buy-button">
-                  Buy
-                </button>
-                <button
-                  onClick={() => deleteFabric(fabric.name)}
-                  className="delete-button"
-                >
-                  Delete
-                </button>
-              </div>
-            ))
-          )}
+                        {/* Attractive Cart Summary */}
+                        <div className="cart-summary">
+                            <h3 className="cart-summary-title">Order Summary</h3>
+
+                            <div className="summary-row">
+                                <span className="summary-label">Subtotal</span>
+                                <span className="summary-value">₹{subtotal.toFixed(2)}</span>
+                            </div>
+
+                            <div className="summary-row">
+                                <span className="summary-label">Items</span>
+                                <span className="summary-value">{itemCount}</span>
+                            </div>
+
+                            <div className="summary-row total">
+                                <span className="summary-label">Total Amount</span>
+                                <span className="summary-value">₹{total.toFixed(2)}</span>
+                            </div>
+
+                            <button
+                                className="checkout-button"
+                                onClick={() => setShowModal(true)}
+                            >
+                                Proceed to Checkout
+                            </button>
+                        </div>
+                    </>
+                )}
+            </div>
+
+            {showModal && currentFabric && (
+                <div className="modal-overlay">
+                    <div className="modal-container">
+                        <div className="modal-header">
+                            <h3>Order {currentFabric.fabricId.name}</h3>
+                            <div className="fabric-details">
+                                <span className="fabric-color" style={{ backgroundColor: currentFabric.fabricId.color.toLowerCase() }}></span>
+                                <span>Color: {currentFabric.fabricId.color}</span>
+                                <span>₹{currentFabric.fabricId.price} per meter</span>
+                            </div>
+                        </div>
+
+                        <form onSubmit={handleSubmit} className="order-form">
+                            {/* ... rest of your modal form ... */}
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
-      </div>
-
-      {showModal && (
-        <div className="modal">
-          <div className="modal-content">
-            <h2>Order Details</h2>
-            <form onSubmit={handleSubmit} className="order-form">
-              <div className="form-group">
-                <label htmlFor="name">Name:</label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={userDetails.name}
-                  onChange={handleInputChange}
-                  placeholder="Enter your full name"
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="address">Address:</label>
-                <textarea
-                  id="address"
-                  name="address"
-                  value={userDetails.address}
-                  onChange={handleInputChange}
-                  placeholder="Enter your complete address"
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="contact">Contact:</label>
-                <input
-                  type="text"
-                  id="contact"
-                  name="contact"
-                  value={userDetails.contact}
-                  onChange={handleInputChange}
-                  placeholder="Enter your contact number"
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="quantity">Quantity (in meters):</label>
-                <input
-                  type="number"
-                  id="quantity"
-                  name="quantity"
-                  value={userDetails.quantity}
-                  onChange={handleInputChange}
-                  min="1"
-                  max="100"
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Total Price:</label>
-                <p>₹{currentFabric.price * (userDetails.quantity || 0)}</p>
-              </div>
-              <div className="form-group">
-                <label>Payment Method:</label>
-                <div>
-                  <label>
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="Credit Card"
-                      checked={userDetails.paymentMethod === "Credit Card"}
-                      onChange={handleInputChange}
-                    />
-                    Credit Card
-                  </label>
-                </div>
-                <div>
-                  <label>
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="Debit Card"
-                      checked={userDetails.paymentMethod === "Debit Card"}
-                      onChange={handleInputChange}
-                    />
-                    Debit Card
-                  </label>
-                </div>
-                <div>
-                  <label>
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="Cash on Delivery"
-                      checked={userDetails.paymentMethod === "Cash on Delivery"}
-                      onChange={handleInputChange}
-                    />
-                    Cash on Delivery
-                  </label>
-                </div>
-              </div>
-              <div className="form-buttons">
-                <button type="submit" className="submit-button">
-                  Place Order
-                </button>
-                <button
-                  type="button"
-                  className="cancel-button"
-                  onClick={() => setShowModal(false)}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+    );
 };
 
-export default CartPage;
+export default cartPage;

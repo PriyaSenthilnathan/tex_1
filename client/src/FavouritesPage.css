@@ -1,105 +1,642 @@
 .favorites-page-container {
-    padding: 20px;
-  }
-  
-  .fabrics-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 20px;
-  }
-  
-  .fabric-item {
-    border: 1px solid #ccc;
-    padding: 15px;
-    border-radius: 20px;
-    background-color: #f9f9f9;
-    text-align: center;
-  }
-  
-  .fabric-item h3 {
-    font-size: 1.5rem;
-    margin-bottom: 10px;
-  }
-  
-  .fabric-item p {
-    font-size: 1rem;
-    margin-bottom: 8px;
-  }
-  
-  .fabric-item .fabric-image {
-    max-width: 200px;
-    max-height: 300px;
-    margin-bottom: 10px;
-  }
-  
-  .modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow-y: auto;
-    overflow-x: hidden;
-  }
-  
-  .modal-content {
-    background: #fff;
-    border-radius: 8px;
-    padding: 20px;
-    width: 90%;
-    max-width: 500px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  }
-  
-  .order-form .form-group {
-    margin-bottom: 15px;
-  }
-  
-  .order-form .form-group label {
-    display: block;
-    font-weight: bold;
-    margin-bottom: 5px;
-  }
-  
-  .order-form .form-group input,
-  .order-form .form-group textarea {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
-  
-  .form-buttons {
-    display: flex;
-    justify-content: space-between;
-  }
-  
-  .submit-button {
-    background-color: #007bff;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  
-  .cancel-button {
-    background-color: #dc3545;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  
-  .submit-button:hover {
-    background-color: #0056b3;
-  }
-  
-  .cancel-button:hover {
-    background-color: #b02a37;
-  }
+  padding-top: 90px;
+  width: 100%;
+  padding: 90px 20px 20px;
+}
+
+.fabrics-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 20px;
+}
+
+.fabric-item {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 16px;
+  width: 300px;
+  text-align: center;
+  background-color: white;
+}
+
+.fabric-item h3 {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+}
+
+.fabric-item p {
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+  color: #555;
+}
+
+.fabric-item .fabric-image {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.order-form .form-group {
+  margin-bottom: 15px;
+}
+
+.order-form .form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.order-form .form-group input,
+.order-form .form-group textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.form-buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.submit-button {
+  background-color: #3498db;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.cancel-button {
+  background-color: #e74c3c;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.submit-button:hover {
+  background-color: #2980b9;
+}
+
+.cancel-button:hover {
+  background-color: #c0392b;
+}
+
+.loading, .error {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1rem;
+}
+
+.error {
+  color: #e74c3c;
+}
+
+.fabric-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  justify-content: center;
+}
+
+/* Container for both buttons */
+.action-buttons {
+  display: flex;
+  justify-content: center; /* Center buttons horizontally */
+  gap: 15px; /* Space between buttons */
+  margin-top: 15px;
+  width: 100%;
+}
+
+/* Base button styles */
+.action-buttons button {
+  flex: 0 0 120px; /* Fixed width of 120px for both buttons */
+  padding: 10px 0; /* Consistent vertical padding */
+  border: none;
+  border-radius: 6px; /* Slightly rounded corners */
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  height: 38px; /* Fixed height */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: row;    
+  gap: 15px;          
+  margin-top: 15px;
+}
+
+/* Remove button */
+.remove-button {
+  background-color: #ffebee;
+  color: #e74c3c;
+  border: 1px solid #e74c3c;
+}
+
+/* Order button */
+.order-button {
+  background-color: #cce5ff;
+  color: #1a73e8;
+  border: 1px solid #1a73e8; /* Added border for definition */
+}
+
+/* Hover states */
+.remove-button:hover {
+  background-color: #fce4ec;
+  transform: translateY(-1px);
+}
+
+.order-button:hover {
+  background-color: #b3d4ff;
+  transform: translateY(-1px);
+}
+
+/* Active states */
+.action-buttons button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.remove-button, .order-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  /* Your existing colors and other styles */
+}
+
+.no-favorites {
+  width: 100%;
+  text-align: center;
+  padding: 2rem;
+  color: #555;
+  font-size: 1rem;
+  grid-column: 1 / -1;
+}
+
+/* Add these to your existing CSS */
+.fabric-card {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.fabric-info {
+  padding: 15px;
+}
+
+.fabric-description {
+  color: #666;
+  font-size: 0.9rem;
+  margin-top: 10px;
+}
+
+.browse-link {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 8px 16px;
+  background-color: #3498db;
+  color: white;
+  border-radius: 4px;
+  text-decoration: none;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.payment-options label {
+  display: block;
+  margin: 5px 0;
+}
+
+.total-price {
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(3px);
+}
+
+.modal-container {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+  background: #f9f9f9;
+  border-radius: 12px 12px 0 0;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #333;
+}
+
+.fabric-details {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-top: 10px;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.fabric-color {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid #ddd;
+}
+
+/* Form Styles */
+.order-form {
+  padding: 20px;
+}
+
+.form-section {
+  margin-bottom: 25px;
+}
+
+.section-title {
+  font-size: 1rem;
+  color: #555;
+  margin-bottom: 15px;
+  padding-bottom: 5px;
+  border-bottom: 1px dashed #ddd;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 5px;
+  color: #555;
+}
+
+.input-icon {
+  font-size: 1.2rem;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: border 0.3s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+/* Quantity Selector */
+.quantity-selector {
+  margin-bottom: 20px;
+}
+
+.quantity-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.quantity-controls button {
+  background: #f0f0f0;
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.quantity-controls button:hover {
+  background: #e0e0e0;
+}
+
+.quantity-controls span {
+  min-width: 30px;
+  text-align: center;
+}
+
+/* Price Summary */
+.price-summary {
+  background: #f9f9f9;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.price-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.price-row.total {
+  font-weight: bold;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #ddd;
+}
+
+/* Payment Options */
+.payment-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.payment-option {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.payment-option.selected {
+  border-color: #3498db;
+  background: #f0f8ff;
+}
+
+.payment-option input {
+  display: none;
+}
+
+.payment-icon {
+  font-size: 1.5rem;
+  margin-bottom: 5px;
+}
+
+/* Form Actions */
+.form-actions {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.cancel-btn {
+  flex: 1;
+  padding: 12px;
+  background: #f5f5f5;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.cancel-btn:hover {
+  background: #e0e0e0;
+}
+
+.submit-btn {
+  flex: 2;
+  padding: 12px;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.2s;
+}
+
+.submit-btn:hover {
+  background: #2980b9;
+}
+
+/* Phone Input Styles */
+.phone-input-container {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.country-code {
+  padding: 0 10px;
+  background: #f5f5f5;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  border-right: 1px solid #ddd;
+}
+
+.phone-input-container input {
+  flex: 1;
+  border: none !important;
+  padding: 10px 15px;
+}
+
+/* Quantity Input Styles */
+.quantity-input {
+  width: 50px;
+  text-align: center;
+  padding: 5px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin: 0 5px;
+}
+
+/* Updated Cancel Button */
+.cancel-btn {
+  flex: 1;
+  padding: 12px;
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.2s;
+}
+
+.cancel-btn:hover {
+  background: #c0392b;
+}
+
+/* Adjust quantity controls */
+.quantity-controls {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 5px;
+}
+
+.quantity-controls button {
+  background: #f0f0f0;
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Phone Input Styles */
+.phone-input-container {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.country-code {
+  padding: 0 12px;
+  background: #f5f5f5;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  border-right: 1px solid #ddd;
+  font-size: 0.9rem;
+}
+
+.phone-input-container input {
+  flex: 1;
+  border: none;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+}
+
+/* Quantity Controls */
+.quantity-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.quantity-input {
+  width: 60px;
+  text-align: center;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  min-width: 40px;
+  transition: width 0.2s ease;
+  -moz-appearance: textfield;
+}
+
+.quantity-input::-webkit-outer-spin-button,
+.quantity-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.quantity-btn {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #ddd;
+  background: #f5f5f5;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.quantity-btn:hover {
+  background: #e0e0e0;
+}
+
+.quantity-input:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}

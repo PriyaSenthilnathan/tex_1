@@ -12,7 +12,7 @@ const Search = () => {
   const [suggestions, setSuggestions] = useState([]);
   const [isListening, setIsListening] = useState(false);
   const navigate = useNavigate();
-  const apiUrl = "https://your-api-endpoint.com/fabrics"; // Update API endpoint
+  const apiUrl = "http://localhost:5000/fabrics"; // Update API endpoint
 
   useEffect(() => {
     axios
@@ -25,17 +25,27 @@ const Search = () => {
       });
   }, []);
 
+  const fetchFabrics = async (searchQuery = "") => {
+    try {
+      const response = await axios.get(apiUrl, {
+        params: { search: searchQuery } // Use 'search' instead of 'q'
+      });
+      setFabrics(response.data);
+    } catch (error) {
+      console.error("Error fetching fabrics:", error);
+    }
+  };
+
   const onInputChange = (e) => {
     const value = e.target.value;
     setSearchTerm(value);
-
+    
+    // Optional: You can keep the client-side suggestions
     if (value.length > 0) {
       const filteredSuggestions = fabrics.filter(
         (fabric) =>
-          (fabric.name &&
-            fabric.name.toLowerCase().includes(value.toLowerCase())) ||
-          (fabric.color &&
-            fabric.color.toLowerCase().includes(value.toLowerCase()))
+          (fabric.name && fabric.name.toLowerCase().includes(value.toLowerCase())) ||
+          (fabric.color && fabric.color.toLowerCase().includes(value.toLowerCase()))
       );
       setSuggestions(filteredSuggestions.slice(0, 5));
     } else {

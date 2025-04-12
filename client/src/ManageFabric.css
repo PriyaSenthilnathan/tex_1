@@ -131,76 +131,141 @@ body {
   background-color: #c0392b; /* Darker red on hover */
 }
 
-/* Fabrics List Section */
-.fabrics-list {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-  overflow-y: auto;
-}
-
-.fabrics-list h2 {
-  font-size: 22px;
-  color: #2c3e50; /* Dark blue */
-  margin-bottom: 20px;
-}
-
-.fabrics-list ul {
-  list-style-type: none;
-  padding: 0;
+/* Fabrics Grid Section */
+.fabric-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 20px;
   width: 100%;
+  padding: 20px;
 }
 
-.fabrics-list li {
+/* Fabric Card Styling */
+.fabric-card {
   background-color: #fff;
-  padding: 15px;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  text-align: center;
+  overflow: hidden;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
 }
 
-.fabrics-list li:hover {
+.fabric-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
 }
 
-.fabrics-list h3 {
-  font-size: 18px;
-  color: #2c3e50; /* Dark blue */
-  margin-bottom: 5px;
+/* Fabric Image */
+.fabric-image-container {
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
 }
 
-.fabrics-list p {
-  font-size: 14px;
+.fabric-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.fabric-image:hover {
+  transform: scale(1.05);
+}
+
+.fabric-image-placeholder {
+  background-color: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  height: 100%;
+}
+
+/* Fabric Details */
+.fabric-details {
+  padding: 15px;
+  flex-grow: 1;
+}
+
+.fabric-name {
+  font-size: 18px;
+  color: #2c3e50; /* Dark blue */
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.fabric-property {
+  margin-bottom: 8px;
+}
+
+.property-label {
+  font-weight: 600;
+  color: #2c3e50; /* Dark blue */
+  display: inline-block;
+  width: 100px;
+}
+
+.property-value {
   color: #666;
 }
 
-.fabrics-list img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 5px;
-  margin-top: 10px;
+/* Fabric Actions */
+.fabric-actions {
+  display: flex;
+  padding: 10px 15px;
+  border-top: 1px solid #eee;
+  background: #f9f9f9;
+  gap: 10px;
 }
 
-.fabrics-list button {
-  background-color: #2c3e50; /* Dark blue */
-  color: white;
-  padding: 8px 15px;
+.fabric-actions button {
+  flex: 1;
+  padding: 8px 12px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  margin-top: 10px;
+  font-weight: 500;
   transition: background-color 0.3s ease;
 }
 
-.fabrics-list button:hover {
-  background-color: #f1c40f; /* Gold on hover */
+.edit-button {
+  background-color: #2c3e50; /* Dark blue */
+  color: white;
+}
+
+.edit-button:hover {
+  background-color: #1a252f; /* Darker blue */
+}
+
+.delete-button {
+  background-color: #e74c3c; /* Red */
+  color: white;
+}
+
+.delete-button:hover {
+  background-color: #c0392b; /* Darker red */
+}
+
+/* No fabrics message */
+.no-fabrics-message {
+  text-align: center;
+  color: #666;
+  margin-top: 20px;
+  font-style: italic;
+}
+
+/* Message styling */
+.message {
+  padding: 10px;
+  background-color: #dff0d8;
+  color: #3c763d;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  text-align: center;
+  max-width: 500px;
+  margin: 0 auto 20px;
 }
 
 /* Logout Icon Styling */
@@ -213,4 +278,271 @@ body {
 
 .logout-icon-div:hover {
   color: #f1c40f; /* Gold on hover */
+}
+/* Fabric Grid Layout */
+.fabric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 25px;
+  width: 100%;
+  padding: 20px 0;
+}
+
+/* Fabric Card Styling */
+.fabric-card {
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+  border: 1px solid #e0e0e0;
+}
+
+.fabric-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+}
+
+/* Image Container */
+.fabric-image-container {
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+  position: relative;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.fabric-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.image-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #888;
+  font-size: 16px;
+  background-color: #f1f1f1;
+}
+
+/* Fabric Content */
+.fabric-content {
+  padding: 20px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.fabric-title {
+  font-size: 20px;
+  color: #2c3e50;
+  margin-bottom: 15px;
+  text-align: center;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Property Grid Layout */
+.fabric-properties {
+  flex-grow: 1;
+  margin-bottom: 15px;
+}
+
+.property-row {
+  display: flex;
+  margin-bottom: 10px;
+  align-items: flex-start;
+}
+
+.property-label {
+  font-weight: 600;
+  color: #2c3e50;
+  min-width: 100px;
+  padding-right: 10px;
+  font-size: 14px;
+}
+
+.property-value {
+  color: #555;
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* Action Buttons */
+.fabric-actions {
+  display: flex;
+  gap: 12px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+.edit-button, .delete-button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.edit-button {
+  background-color: #3498db;
+  color: white;
+}
+
+.edit-button:hover {
+  background-color: #2980b9;
+}
+
+.delete-button {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.delete-button:hover {
+  background-color: #c0392b;
+}
+
+/* Fabric Grid Layout */
+.fabric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 25px;
+  width: 100%;
+  padding: 20px 0;
+}
+
+/* Fabric Card Container */
+.fabric-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease;
+}
+
+.fabric-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+}
+
+/* Image Section */
+.card-image-container {
+  width: 100%;
+  height: 200px;
+  position: relative;
+  overflow: hidden;
+  background-color: #f8f9fa;
+}
+
+.card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.card-image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f1f1f1;
+  color: #888;
+  font-size: 14px;
+}
+
+/* Content Section */
+.card-content {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.card-title {
+  font-size: 18px;
+  color: #2c3e50;
+  margin: 0 0 15px 0;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* Properties Grid */
+.card-properties {
+  margin-bottom: 15px;
+}
+
+.property {
+  display: flex;
+  margin-bottom: 10px;
+  align-items: flex-start;
+}
+
+.property-name {
+  font-weight: 600;
+  color: #2c3e50;
+  width: 90px;
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
+.property-value {
+  color: #555;
+  font-size: 14px;
+  flex-grow: 1;
+  line-height: 1.4;
+}
+
+/* Action Buttons */
+.card-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+.edit-btn, .delete-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-size: 14px;
+}
+
+.edit-btn {
+  background-color: #3498db;
+  color: white;
+}
+
+.edit-btn:hover {
+  background-color: #2980b9;
+}
+
+.delete-btn {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.delete-btn:hover {
+  background-color: #c0392b;
 }

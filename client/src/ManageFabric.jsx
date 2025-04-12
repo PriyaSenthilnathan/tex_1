@@ -17,7 +17,7 @@ const ManageFabric = () => {
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
 
-  const apiUrl = 'https://your-api-endpoint.com/fabrics'; // Update API endpoint
+  const apiUrl = 'http://localhost:5000/fabrics'; // Update API endpoint
 
   useEffect(() => {
     axios.get(apiUrl)
@@ -148,7 +148,7 @@ const ManageFabric = () => {
       </div>
 
       <div className="manage-fabrics">
-        <h1>Manage Fabrics</h1>
+        <h1>Add Fabrics</h1>
         {message && <p className="message">{message}</p>}
         <div className="form-container">
           <input
@@ -189,33 +189,64 @@ const ManageFabric = () => {
         </div>
 
         <div className="fabrics-list">
-          <h2>Fabrics List</h2>
-          {fabrics.length === 0 ? (
-            <p>No fabrics available. Add a fabric to get started!</p>
-          ) : (
-            <ul>
-              {fabrics.map((fabric) => (
-                <li key={fabric._id}>
-                  <h3>{fabric.name}</h3>
-                  <p><strong>Material:</strong> {fabric.material}</p>
-                  <p><strong>Color:</strong> {fabric.color}</p>
-                  <p><strong>Price:</strong> ₹{fabric.price} per meter</p>
-                  <p><strong>Description:</strong> {fabric.description}</p>
-                  {fabric.imagePath && (
-                    <img
-                      src={`https://your-api-endpoint.com/${fabric.imagePath}`}
-                      alt={fabric.name}
-                      width="100"
-                      onError={(e) => e.target.src = 'placeholder.jpg'}
-                    />
-                  )}
-                  <button onClick={() => handleEditFabric(fabric)}>Edit</button>
-                  <button onClick={() => handleDeleteFabric(fabric._id)}>Delete</button>
-                </li>
-              ))}
-            </ul>
-          )}
+  <h2>Fabrics List</h2>
+  {fabrics.length === 0 ? (
+    <p className="no-fabrics-message">No fabrics available. Add a fabric to get started!</p>
+  ) : (
+    <div className="fabric-grid">
+      {fabrics.map((fabric) => (
+        <div key={fabric._id} className="fabric-card">
+          <div className="card-image-container">
+          {fabric.imageUrl ? (
+  <img
+    src={fabric.imageUrl.includes('http') ? fabric.imageUrl : `http://localhost:5000${fabric.imageUrl}`}
+    alt={fabric.name}
+    className="card-image"
+    onError={(e) => {
+      e.target.src = '/placeholder.jpg';
+      e.target.className = 'card-image-placeholder';
+    }}
+  />
+) : (
+  <div className="card-image-placeholder">No Image Available</div>
+)}
+          </div>
+          <div className="card-content">
+            <h3 className="card-title">{fabric.name}</h3>
+            <div className="card-properties">
+              <div className="property">
+                <span className="property-name">Color:</span>
+                <span className="property-value">{fabric.color}</span>
+              </div>
+              <div className="property">
+                <span className="property-name">Price:</span>
+                <span className="property-value">₹{fabric.price} per meter</span>
+              </div>
+              <div className="property">
+                <span className="property-name">Description:</span>
+                <p className="property-value">{fabric.description}</p>
+              </div>
+            </div>
+            <div className="card-actions">
+              <button 
+                onClick={() => handleEditFabric(fabric)}
+                className="edit-btn"
+              >
+                Edit
+              </button>
+              <button 
+                onClick={() => handleDeleteFabric(fabric._id)}
+                className="delete-btn"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
         </div>
+      ))}
+    </div>
+  )}
+</div>
       </div>
     </div>
   );
