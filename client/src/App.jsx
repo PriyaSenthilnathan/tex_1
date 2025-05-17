@@ -11,6 +11,7 @@ import UserDashBoard from "./UserDashBoard.jsx";
 import SearchFabric from "./SearchFabric.jsx";
 import FavoritesPage from "./FavouritesPage.jsx";
 import CartPage from "./cartPage.jsx";
+import Contact from "./Contact.jsx";
 
 const App = () => {
   return(
@@ -27,6 +28,7 @@ const App = () => {
       <Route path="/search-fabrics" element={ <SearchFabric /> } />
       <Route path="/favorites" element={ <FavoritesPage /> } />
       <Route path="/cart" element={ <CartPage /> } />
+      <Route path="/contact" element={<Contact />} />
     </Routes>
   </Router>
   );

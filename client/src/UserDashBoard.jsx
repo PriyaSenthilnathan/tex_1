@@ -26,6 +26,7 @@ const UserDashBoard = () => {
           <Link to="/search-fabrics">Search Fabrics</Link>
           <Link to="/favorites">Favorites</Link>
           <Link to="/cart">Cart</Link>
+          <Link to="/contact">Contact</Link>
           <div className="logout-icon-div" onClick={handleLogout}>
             <FaSignOutAlt />
           </div>

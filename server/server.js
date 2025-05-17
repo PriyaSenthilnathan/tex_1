@@ -45,6 +45,7 @@ const User = mongoose.model('User', userSchema);
 const fabricSchema = new mongoose.Schema({
   name: { type: String, required: true },
   color: { type: String, required: true },
+  category: { type: String, required: true },
   imageUrl: { type: String },
   price: { type: Number, required: true },
   description: { type: String, required: true },
@@ -56,7 +57,8 @@ const Fabric = mongoose.model('Fabric', fabricSchema);
 const orderSchema = new mongoose.Schema({
   fabricId: String,
   fabricName: String,
-  color: String,  
+  color: String,
+  category: String,  
   pricePerMeter: Number,  
   userName: String,
   userAddress: String,
@@ -139,7 +141,7 @@ app.get('/fabrics', async (req, res) => {
 // Add a New Fabric (updated)
 app.post('/fabrics', upload.single('image'), async (req, res) => {
   try {
-    const { name, color, price, description } = req.body;
+    const { name, color, category, price, description } = req.body;
     
     if (!name || !color || !price || !description) {
       return res.status(400).json({ message: 'All fields are required' });
@@ -149,7 +151,8 @@ app.post('/fabrics', upload.single('image'), async (req, res) => {
 
     const newFabric = new Fabric({ 
       name,  
-      color, 
+      color,
+      category, 
       imageUrl, 
       price: parseFloat(price), 
       description 
@@ -171,7 +174,7 @@ app.post('/fabrics', upload.single('image'), async (req, res) => {
 app.put('/fabrics/:id', upload.single('image'), async (req, res) => {
   try {
     const { name, color, price, description } = req.body;
-    const updateData = { name, color, price: parseFloat(price), description };
+    const updateData = { name, color, category, price: parseFloat(price), description };
 
     if (req.file) {
       updateData.imageUrl = `/uploads/${req.file.filename}`;
@@ -242,6 +245,7 @@ app.get('/fabrics/search', async (req, res) => {
         $or: [
           { name: searchRegex },
           { color: searchRegex },
+          { category: searchRegex },
           { description: searchRegex }
         ]
       };
@@ -306,6 +310,17 @@ app.get('/favorites', async (req, res) => {
 });
 
 app.post('/favorites', async (req, res) => {
+  const { userId, productId } = req.body;
+  try {
+    const userFavorites = await Favorite.findOneAndUpdate(
+      { user: userId },
+      { $addToSet: { products: productId } },
+      { upsert: true, new: true }
+    );
+    res.status(200).json(userFavorites);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
   try {
     const { email, fabricId } = req.body;
     
@@ -380,6 +395,8 @@ const cartSchema = new mongoose.Schema({
   email: { type: String, required: true },
   fabricId: { type: mongoose.Schema.Types.ObjectId, ref: 'Fabric', required: true },
   fabricName: { type: String, required: true },
+  color: { type: String, required: true },
+  category: { type: String, required: true },
   imageUrl: { type: String },
   price: { type: Number, required: true },
   quantity: { type: Number, default: 1 },
@@ -391,7 +408,7 @@ const Cart = mongoose.model('Cart', cartSchema);
 // Add to Cart
 app.post('/cart', async (req, res) => {
   try {
-    const { email, fabricId, fabricName, imageUrl, price } = req.body;
+    const { email, fabricId, fabricName, color, category, imageUrl, price } = req.body;
     
     // Check if already in cart
     let cartItem = await Cart.findOne({ email, fabricId });
@@ -404,6 +421,8 @@ app.post('/cart', async (req, res) => {
         email,
         fabricId,
         fabricName,
+        color,
+        category,
         imageUrl,
         price,
         quantity: 1

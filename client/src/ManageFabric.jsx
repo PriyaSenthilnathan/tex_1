@@ -10,6 +10,7 @@ const ManageFabric = () => {
   const [name, setName] = useState('');
   const [material, setMaterial] = useState('');
   const [color, setColor] = useState('');
+  const [category, setCategory] = useState('');
   const [price, setPrice] = useState('');
   const [description, setDescription] = useState('');
   const [imageFile, setImageFile] = useState(null);
@@ -41,6 +42,7 @@ const ManageFabric = () => {
       const formData = new FormData();
       formData.append('name', name);
       formData.append('color', color);
+      formData.append('category', category);
       formData.append('price', price);
       formData.append('description', description);
       formData.append('image', imageFile);
@@ -67,6 +69,7 @@ const ManageFabric = () => {
     setEditingFabric(fabric);
     setName(fabric.name);
     setColor(fabric.color);
+    setCategory(fabric.category);
     setPrice(fabric.price);
     setDescription(fabric.description);
     setImageFile(null); // Reset image file when editing
@@ -77,6 +80,7 @@ const ManageFabric = () => {
       const formData = new FormData();
       formData.append('name', name);
       formData.append('color', color);
+      formData.append('category', category);
       formData.append('price', price);
       formData.append('description', description);
       if (imageFile) {
@@ -116,6 +120,7 @@ const ManageFabric = () => {
   const clearForm = () => {
     setName('');
     setColor('');
+    setCategory('');
     setPrice('');
     setDescription('');
     setImageFile(null);
@@ -164,6 +169,12 @@ const ManageFabric = () => {
             onChange={(e) => setColor(e.target.value)}
           />
           <input
+            type="text"
+            placeholder="Category"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+          />
+          <input
             type="number"
             placeholder="Price per meter"
             value={price}
@@ -189,64 +200,68 @@ const ManageFabric = () => {
         </div>
 
         <div className="fabrics-list">
-  <h2>Fabrics List</h2>
-  {fabrics.length === 0 ? (
-    <p className="no-fabrics-message">No fabrics available. Add a fabric to get started!</p>
-  ) : (
-    <div className="fabric-grid">
-      {fabrics.map((fabric) => (
-        <div key={fabric._id} className="fabric-card">
-          <div className="card-image-container">
-          {fabric.imageUrl ? (
-  <img
-    src={fabric.imageUrl.includes('http') ? fabric.imageUrl : `http://localhost:5000${fabric.imageUrl}`}
-    alt={fabric.name}
-    className="card-image"
-    onError={(e) => {
-      e.target.src = '/placeholder.jpg';
-      e.target.className = 'card-image-placeholder';
-    }}
-  />
-) : (
-  <div className="card-image-placeholder">No Image Available</div>
-)}
-          </div>
-          <div className="card-content">
-            <h3 className="card-title">{fabric.name}</h3>
-            <div className="card-properties">
-              <div className="property">
-                <span className="property-name">Color:</span>
-                <span className="property-value">{fabric.color}</span>
-              </div>
-              <div className="property">
-                <span className="property-name">Price:</span>
-                <span className="property-value">₹{fabric.price} per meter</span>
-              </div>
-              <div className="property">
-                <span className="property-name">Description:</span>
-                <p className="property-value">{fabric.description}</p>
-              </div>
+          <h2>Fabrics List</h2>
+          {fabrics.length === 0 ? (
+            <p className="no-fabrics-message">No fabrics available. Add a fabric to get started!</p>
+          ) : (
+            <div className="fabric-grid">
+              {fabrics.map((fabric) => (
+                <div key={fabric._id} className="fabric-card">
+                  <div className="card-image-container">
+                    {fabric.imageUrl ? (
+                      <img
+                        src={fabric.imageUrl.includes('http') ? fabric.imageUrl : `http://localhost:5000${fabric.imageUrl}`}
+                        alt={fabric.name}
+                        className="card-image"
+                        onError={(e) => {
+                          e.target.src = '/placeholder.jpg';
+                          e.target.className = 'card-image-placeholder';
+                        }}
+                      />
+                    ) : (
+                      <div className="card-image-placeholder">No Image Available</div>
+                    )}
+                  </div>
+                  <div className="card-content">
+                    <h3 className="card-title">{fabric.name}</h3>
+                    <div className="card-properties">
+                      <div className="property">
+                        <span className="property-name">Color:</span>
+                        <span className="property-value">{fabric.color}</span>
+                      </div>
+                      <div className="property">
+                        <span className="property-name">Category:</span>
+                        <span className="property-value">{fabric.category}</span>
+                      </div>
+                      <div className="property">
+                        <span className="property-name">Price:</span>
+                        <span className="property-value">₹{fabric.price} per meter</span>
+                      </div>
+                      <div className="property">
+                        <span className="property-name">Description:</span>
+                        <p className="property-value">{fabric.description}</p>
+                      </div>
+                    </div>
+                    <div className="card-actions">
+                      <button
+                        onClick={() => handleEditFabric(fabric)}
+                        className="edit-btn"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteFabric(fabric._id)}
+                        className="delete-btn"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="card-actions">
-              <button 
-                onClick={() => handleEditFabric(fabric)}
-                className="edit-btn"
-              >
-                Edit
-              </button>
-              <button 
-                onClick={() => handleDeleteFabric(fabric._id)}
-                className="delete-btn"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
+          )}
         </div>
-      ))}
-    </div>
-  )}
-</div>
       </div>
     </div>
   );

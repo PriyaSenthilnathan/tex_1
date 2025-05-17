@@ -640,3 +640,65 @@
   border-color: #3498db;
   box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
 }
+
+/* Navbar container */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #ffffffcc; /* Slightly transparent white for subtle layering */
+  padding: 15px 40px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  backdrop-filter: saturate(180%) blur(10px);
+}
+
+/* Website name/logo */
+.website-name {
+  font-size: 28px;
+  font-weight: 700;
+  color: #2874f0;
+  letter-spacing: 1.2px;
+  cursor: default;
+  user-select: none;
+}
+
+/* Navigation links container */
+.nav-links {
+  display: flex;
+  align-items: center;
+}
+
+/* Each nav link */
+.nav-links a {
+  margin-left: 25px;
+  text-decoration: none;
+  color: #2874f0;
+  font-weight: 600;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  transition: color 0.3s ease, transform 0.2s ease;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+.nav-links a:hover {
+  color: #fb641b;
+  background-color: #fef3e7;
+  transform: scale(1.05);
+}
+
+/* Icons inside nav links */
+.nav-links a svg {
+  margin-right: 6px;
+  font-size: 18px;
+  transition: color 0.3s ease;
+}
+
+/* Hover icon color change */
+.nav-links a:hover svg {
+  color: #fb641b;
+}

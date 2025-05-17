@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './register.css';
+import { FaUser, FaShoppingCart } from 'react-icons/fa';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -61,11 +62,24 @@ const Register = () => {
   const handleClose = () => navigate('/');
 
   return (
+    <div>
+      {/* Navbar */}
+    <div className="navbar">
+          <div className="website-name">SaraswathiTex</div>
+          <nav className="nav-links">
+            <Link to="/">Home</Link>
+            <Link to="/login"><FaUser /> Login</Link>
+            <Link to="/cart"><FaShoppingCart /> Cart</Link>
+            <Link to="/contact">Contact</Link>
+          </nav>
+        </div>
+    
+    {/* Register Form */}
     <div className="page-background">
       <div className="register-container">
-        <span onClick={handleClose}>&times;</span>
+        <span className="close-button" onClick={handleClose}>&times;</span>
         <h1>Register</h1>
-        {error && <p style={{ color: 'red', marginBottom: '10px' }}>{error}</p>}
+        {error && <p className="error-message">{error}</p>}
         <input
           type="text"
           name="username"
@@ -102,6 +116,7 @@ const Register = () => {
           <button onClick={() => navigate('/login')}>Login here</button>
         </p>
       </div>
+    </div>
     </div>
   );
 };

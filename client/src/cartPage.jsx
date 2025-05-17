@@ -183,6 +183,7 @@ const cartPage = () => {
                     <Link to="/search-fabrics">Search Fabrics</Link>
                     <Link to="/favorites">Favourites</Link>
                     <Link to="/cart" className="active">Cart</Link>
+                    <Link to="/contact">Contact</Link>
                     <div className="logout-icon-div" onClick={handleLogout}>
                         <FaSignOutAlt />
                     </div>

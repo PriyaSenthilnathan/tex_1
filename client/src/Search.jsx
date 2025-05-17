@@ -45,7 +45,8 @@ const Search = () => {
       const filteredSuggestions = fabrics.filter(
         (fabric) =>
           (fabric.name && fabric.name.toLowerCase().includes(value.toLowerCase())) ||
-          (fabric.color && fabric.color.toLowerCase().includes(value.toLowerCase()))
+          (fabric.color && fabric.color.toLowerCase().includes(value.toLowerCase())) ||
+          (fabric.category && fabric.category.toLowercase().includes(value.toLowerCase()))
       );
       setSuggestions(filteredSuggestions.slice(0, 5));
     } else {
@@ -82,11 +83,10 @@ const Search = () => {
 
         const filteredSuggestions = fabrics.filter(
           (fabric) =>
-            (fabric.name &&
-              fabric.name.toLowerCase().includes(transcript.toLowerCase())) ||
-            (fabric.color &&
-              fabric.color.toLowerCase().includes(transcript.toLowerCase()))
-        );
+            (fabric.name && fabric.name.toLowerCase().includes(transcript.toLowerCase())) ||
+            (fabric.color && fabric.color.toLowerCase().includes(transcript.toLowerCase())) ||
+            fabric.category && fabric.category.toLowerCase().includes(transcript.toLowerCase()));
+        
         setSuggestions(filteredSuggestions.slice(0, 5));
       };
 
@@ -107,10 +107,9 @@ const Search = () => {
 
   const filteredFabrics = fabrics.filter(
     (fabric) =>
-      (fabric.name &&
-        fabric.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (fabric.color &&
-        fabric.color.toLowerCase().includes(searchTerm.toLowerCase()))
+      (fabric.name && fabric.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (fabric.color && fabric.color.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (fabric.category && fabric.category.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const handleLogout = () => {
@@ -162,13 +161,13 @@ const Search = () => {
               <li
                 key={suggestion._id}
                 onClick={(e) => {
-                  setSearchTerm(suggestion.name || suggestion.color);
+                  setSearchTerm(suggestion.name || suggestion.color || suggestion.category);
                   setSuggestions([]);
                   e.target.blur();
                 }}
                 className="suggestion-item"
               >
-                {suggestion.name || suggestion.color}
+                {suggestion.name || suggestion.color || suggestion.category}
               </li>
             ))}
           </ul>
@@ -207,6 +206,9 @@ const Search = () => {
               <h3>{fabric.name}</h3>
               <p>
                 <strong>Color:</strong> {fabric.color}
+              </p>
+              <p>
+                <strong>Category:</strong> {fabric.category}
               </p>
               <p>
                 <strong>Price:</strong> ₹{fabric.price} per meter

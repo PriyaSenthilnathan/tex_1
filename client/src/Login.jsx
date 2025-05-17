@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from './firebase';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import './login.css';
-import googleLogo from './assets/google-logo.png'; // Ensure this path is correct
+import googleLogo from './assets/google-logo.png';
+import { FaUser, FaShoppingCart } from 'react-icons/fa';
 
 const provider = new GoogleAuthProvider();
 
@@ -21,6 +22,7 @@ const Login = () => {
     setLoading(true);
     setError(''); // Clear previous errors
 
+    
     try {
       const response = await axios.post('http://localhost:5000/login', {
         email,
@@ -67,6 +69,17 @@ const Login = () => {
   const handleClose = () => navigate('/');
 
   return (
+  <>
+    <div className="navbar">
+      <div className="website-name">SaraswathiTex</div>
+      <nav className="nav-links">
+        <Link to="/">Home</Link>
+        <Link to="/login"><FaUser /> Login</Link>
+        <Link to="/cart"><FaShoppingCart /> Cart</Link>
+        <Link to="/contact">Contact</Link>
+      </nav>
+    </div>
+
     <div className="page-background">
       <div className="login-container">
         <span onClick={handleClose}>&times;</span>
@@ -98,7 +111,9 @@ const Login = () => {
         </button>
       </div>
     </div>
-  );
+  </>
+);
 };
+
 
 export default Login;
