@@ -202,9 +202,10 @@ const SearchFabric = () => {
         <div className="website-name">SaraswathiTex</div>
         <nav className="nav-links">
           <Link to="/UserDashboard">Home</Link>
-          <Link to="/search-fabrics">Search Fabrics</Link>
+          <Link to="/search-fabrics">Fabrics</Link>
           <Link to="/favorites">Favourites</Link>
           <Link to="/cart">Cart</Link>
+          <Link to="/orders">My Orders</Link>
           <Link to="/contact">Contact</Link>
           <div className="logout-icon-div" onClick={handleLogout}>
             <FaSignOutAlt />

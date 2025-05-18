@@ -35,7 +35,7 @@ const FavoritesPage = () => {
         const response = await axios.get(`http://localhost:5000/favorites`, {
           params: { email: userEmail }
         });
-        
+
         setFavorites(response.data.map(fav => fav.fabricId));
         setError(null);
       } catch (error) {
@@ -55,7 +55,7 @@ const FavoritesPage = () => {
       await axios.delete("http://localhost:5000/favorites", {
         params: { email: userEmail, fabricId }
       });
-      
+
       setFavorites(prev => prev.filter(f => f._id !== fabricId));
     } catch (error) {
       console.error("Error removing favorite:", error);
@@ -64,9 +64,9 @@ const FavoritesPage = () => {
   };
 
   const handleOrder = (fabric) => {
-    setCurrentFabric(fabric);
-    setShowModal(true);
+    navigate("/order", { state: { fabric } });
   };
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -132,9 +132,10 @@ const FavoritesPage = () => {
         <div className="website-name">SaraswathiTex</div>
         <nav className="nav-links">
           <Link to="/UserDashboard">Home</Link>
-          <Link to="/search-fabrics">Search Fabrics</Link>
+          <Link to="/search-fabrics">Fabrics</Link>
           <Link to="/favorites" className="active">Favourites</Link>
           <Link to="/cart">Cart</Link>
+          <Link to="/orders">My Orders</Link>
           <Link to="/contact">Contact</Link>
           <div className="logout-icon-div" onClick={handleLogout}>
             <FaSignOutAlt />
@@ -144,7 +145,7 @@ const FavoritesPage = () => {
 
       <div className="favorites-page-container">
         <h2>Your Favourites</h2>
-        
+
         {favorites.length === 0 ? (
           <div className="no-favorites">
             <p>You haven't added any favorites yet.</p>
@@ -168,17 +169,17 @@ const FavoritesPage = () => {
                   <p className="fabric-description"><strong>Description:</strong>{fabric.description}</p>
                 </div>
                 <div className="action-buttons">
-                  <button 
-                    onClick={() => handleRemoveFavorite(fabric._id)} 
+                  <button
+                    onClick={() => handleRemoveFavorite(fabric._id)}
                     className="remove-button"
                   >
-                     Remove
+                    Remove
                   </button>
-                  <button 
-                    onClick={() => handleOrder(fabric)} 
+                  <button
+                    onClick={() => handleOrder(fabric)}
                     className="order-button"
                   >
-                     Order
+                    Order
                   </button>
                 </div>
               </div>
@@ -188,151 +189,151 @@ const FavoritesPage = () => {
       </div>
 
       {showModal && currentFabric && (
-  <div className="modal-overlay">
-    <div className="modal-container">
-      <div className="modal-header">
-        <h3>Order {currentFabric.name}</h3>
-        <div className="fabric-details">
-          <span className="fabric-color" style={{ backgroundColor: currentFabric.color.toLowerCase() }}></span>
-          <span>Color: {currentFabric.color}</span>
-          <span>₹{currentFabric.price} per meter</span>
-        </div>
-      </div>
-
-      <form onSubmit={handleSubmit} className="order-form">
-        <div className="form-section">
-          <h4 className="section-title">Shipping Details</h4>
-          <div className="form-group">
-            <label>
-              <input
-                type="text"
-                name="name"
-                placeholder="Full Name"
-                value={userDetails.name}
-                onChange={handleInputChange}
-                required
-              />
-            </label>
-          </div>
-
-          <div className="form-group">
-            <label>
-              <textarea
-                name="address"
-                placeholder="Complete Address"
-                value={userDetails.address}
-                onChange={handleInputChange}
-                required
-              />
-            </label>
-          </div>
-
-          <div className="form-group">
-  <label>Contact Number</label>
-  <div className="phone-input-container">
-    <span className="country-code">+91</span>
-    <input
-      type="tel"
-      name="contact"
-      placeholder="9876543210"
-      value={userDetails.contact}
-      onChange={handleInputChange}
-      required
-      pattern="[0-9]{10}"
-      title="Please enter a 10-digit phone number"
-    />
-  </div>
-</div>
-        </div>
-
-        <div className="form-section">
-          <h4 className="section-title">Order Summary</h4>
-          <div className="quantity-selector">
-            <label>Quantity (meters)</label>
-            <div className="quantity-controls">
-  <button 
-    type="button" 
-    onClick={() => setUserDetails({...userDetails, quantity: Math.max(1, userDetails.quantity - 1)})}
-    className="quantity-btn"
-  >
-    −
-  </button>
-  <input
-    type="number"
-    name="quantity"
-    min="1"
-    value={userDetails.quantity}
-    onChange={(e) => {
-      const value = e.target.value;
-      if (value === '' || /^[1-9]\d*$/.test(value)) {
-        setUserDetails({
-          ...userDetails,
-          quantity: value === '' ? 1 : parseInt(value)
-        });
-      }
-    }}
-    className="quantity-input"
-    style={{ width: `${Math.max(2, userDetails.quantity.toString().length) * 10 + 20}px` }}
-  />
-  <button 
-    type="button" 
-    onClick={() => setUserDetails({...userDetails, quantity: (parseInt(userDetails.quantity) + 1)})}
-    className="quantity-btn"
-  >
-    +
-  </button>
-</div>
-          </div>
-
-          <div className="price-summary">
-            <div className="price-row">
-              <span>Price per meter</span>
-              <span>₹{currentFabric.price}</span>
+        <div className="modal-overlay">
+          <div className="modal-container">
+            <div className="modal-header">
+              <h3>Order {currentFabric.name}</h3>
+              <div className="fabric-details">
+                <span className="fabric-color" style={{ backgroundColor: currentFabric.color.toLowerCase() }}></span>
+                <span>Color: {currentFabric.color}</span>
+                <span>₹{currentFabric.price} per meter</span>
+              </div>
             </div>
-            <div className="price-row">
-              <span>Quantity</span>
-              <span>{userDetails.quantity} m</span>
-            </div>
-            <div className="price-row total">
-              <span>Total Amount</span>
-              <span>₹{currentFabric.price * userDetails.quantity}</span>
-            </div>
-          </div>
-        </div>
 
-        <div className="form-section">
-          <h4 className="section-title">Payment Method</h4>
-          <div className="payment-options">
-            {["Cash on Delivery", "Credit Card", "Debit Card"].map(method => (
-              <label key={method} className={`payment-option ${userDetails.paymentMethod === method ? 'selected' : ''}`}>
-                <input
-                  type="radio"
-                  name="paymentMethod"
-                  value={method}
-                  checked={userDetails.paymentMethod === method}
-                  onChange={handleInputChange}
-                />
-                <div className="payment-icon">
-                  {method === "Cash on Delivery" ? "💰" : method === "Credit Card" ? "💳" : "🏦"}
+            <form onSubmit={handleSubmit} className="order-form">
+              <div className="form-section">
+                <h4 className="section-title">Shipping Details</h4>
+                <div className="form-group">
+                  <label>
+                    <input
+                      type="text"
+                      name="name"
+                      placeholder="Full Name"
+                      value={userDetails.name}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </label>
                 </div>
-                <span>{method}</span>
-              </label>
-            ))}
+
+                <div className="form-group">
+                  <label>
+                    <textarea
+                      name="address"
+                      placeholder="Complete Address"
+                      value={userDetails.address}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </label>
+                </div>
+
+                <div className="form-group">
+                  <label>Contact Number</label>
+                  <div className="phone-input-container">
+                    <span className="country-code">+91</span>
+                    <input
+                      type="tel"
+                      name="contact"
+                      placeholder="9876543210"
+                      value={userDetails.contact}
+                      onChange={handleInputChange}
+                      required
+                      pattern="[0-9]{10}"
+                      title="Please enter a 10-digit phone number"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-section">
+                <h4 className="section-title">Order Summary</h4>
+                <div className="quantity-selector">
+                  <label>Quantity (meters)</label>
+                  <div className="quantity-controls">
+                    <button
+                      type="button"
+                      onClick={() => setUserDetails({ ...userDetails, quantity: Math.max(1, userDetails.quantity - 1) })}
+                      className="quantity-btn"
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      name="quantity"
+                      min="1"
+                      value={userDetails.quantity}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === '' || /^[1-9]\d*$/.test(value)) {
+                          setUserDetails({
+                            ...userDetails,
+                            quantity: value === '' ? 1 : parseInt(value)
+                          });
+                        }
+                      }}
+                      className="quantity-input"
+                      style={{ width: `${Math.max(2, userDetails.quantity.toString().length) * 10 + 20}px` }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setUserDetails({ ...userDetails, quantity: (parseInt(userDetails.quantity) + 1) })}
+                      className="quantity-btn"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                <div className="price-summary">
+                  <div className="price-row">
+                    <span>Price per meter</span>
+                    <span>₹{currentFabric.price}</span>
+                  </div>
+                  <div className="price-row">
+                    <span>Quantity</span>
+                    <span>{userDetails.quantity} m</span>
+                  </div>
+                  <div className="price-row total">
+                    <span>Total Amount</span>
+                    <span>₹{currentFabric.price * userDetails.quantity}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-section">
+                <h4 className="section-title">Payment Method</h4>
+                <div className="payment-options">
+                  {["Cash on Delivery", "Credit Card", "Debit Card"].map(method => (
+                    <label key={method} className={`payment-option ${userDetails.paymentMethod === method ? 'selected' : ''}`}>
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value={method}
+                        checked={userDetails.paymentMethod === method}
+                        onChange={handleInputChange}
+                      />
+                      <div className="payment-icon">
+                        {method === "Cash on Delivery" ? "💰" : method === "Credit Card" ? "💳" : "🏦"}
+                      </div>
+                      <span>{method}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="form-actions">
+                <button type="button" className="cancel-btn" onClick={() => setShowModal(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="submit-btn">
+                  Place Order - ₹{currentFabric.price * userDetails.quantity}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
-
-        <div className="form-actions">
-          <button type="button" className="cancel-btn" onClick={() => setShowModal(false)}>
-            Cancel
-          </button>
-          <button type="submit" className="submit-btn">
-            Place Order - ₹{currentFabric.price * userDetails.quantity}
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-)}
+      )}
     </div>
   );
 };

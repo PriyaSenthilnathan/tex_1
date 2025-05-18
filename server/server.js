@@ -437,42 +437,123 @@ app.post('/cart', async (req, res) => {
   }
 });
 
-// Get Cart Items
+// Get Cart Items - Fixed Version
+// Enhanced cart items endpoint with better error handling
 app.get('/cart', async (req, res) => {
   try {
     const { email } = req.query;
-    
     if (!email) {
-      return res.status(400).json({ message: 'Email is required' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Email is required'
+      });
     }
 
-    const cartItems = await Cart.find({ email }).populate('fabricId');
-    res.json(cartItems);
+    const cartItems = await Cart.find({ email })
+      .populate({
+        path: 'fabricId',
+        select: 'name color imageUrl price description'
+      })
+      .lean();
+
+    const processedItems = cartItems.map(item => {
+      // Handle cases where fabric might be deleted but still in cart
+      if (!item.fabricId) {
+        return {
+          ...item,
+          fabricId: {
+            _id: 'deleted-item',
+            name: '[Deleted Product]',
+            color: 'N/A',
+            price: 0,
+            description: 'This product is no longer available',
+            imageUrl: null
+          }
+        };
+      }
+
+      // Normalize image URL (handle various path formats)
+      let imageUrl = null;
+      if (item.fabricId.imageUrl) {
+        // Remove any leading/trailing slashes or duplicate uploads folders
+        const normalizedPath = item.fabricId.imageUrl
+          .replace(/^\/+/, '')
+          .replace(/^uploads\/+/, '');
+        imageUrl = `http://localhost:5000/uploads/${normalizedPath}`;
+      }
+
+      return {
+        ...item,
+        fabricId: {
+          ...item.fabricId,
+          imageUrl: imageUrl || '/default-fabric.jpg' // Fallback to default
+        }
+      };
+    });
+
+    res.json({
+      success: true,
+      data: processedItems
+    });
+
   } catch (err) {
-    console.error('Error fetching cart:', err);
-    res.status(500).json({ message: 'Error fetching cart', error: err.message });
+    console.error('Cart fetch error:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch cart items',
+      error: err.message
+    });
   }
 });
+    
 
-// In your backend routes
-app.put('/cart/update', async (req, res) => {
+// Update Cart Quantity
+app.put('/cart/update-quantity', async (req, res) => {
   try {
     const { email, fabricId, quantity } = req.body;
     
-    // Update in database
-    const result = await CartModel.findOneAndUpdate(
-      { email, 'fabricId._id': fabricId },
-      { $set: { quantity } },
-      { new: true }
-    );
-
-    if (!result) {
-      return res.status(404).json({ success: false, message: "Item not found in cart" });
+    if (!email || !fabricId || quantity === undefined) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Email, fabricId and quantity are required" 
+      });
     }
 
-    res.json({ success: true, updatedItem: result });
+    // Validate quantity
+    const newQuantity = parseInt(quantity);
+    if (isNaN(newQuantity) || newQuantity < 1) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Quantity must be a positive number" 
+      });
+    }
+
+    // Update in database
+    const updatedItem = await Cart.findOneAndUpdate(
+      { email, fabricId },
+      { $set: { quantity: newQuantity } },
+      { new: true }
+    ).populate('fabricId');
+
+    if (!updatedItem) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Item not found in cart" 
+      });
+    }
+
+    res.json({ 
+      success: true, 
+      message: "Quantity updated successfully",
+      updatedItem 
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('Error updating cart quantity:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Internal server error",
+      error: error.message 
+    });
   }
 });
 

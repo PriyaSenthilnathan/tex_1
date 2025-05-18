@@ -1,0 +1,66 @@
+.order-page {
+  padding: 2rem;
+  max-width: 1000px;
+  margin: auto;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.order-page h2 {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  color: #2c3e50;
+}
+
+.no-orders {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #888;
+}
+
+.order-list {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.order-card {
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 1.2rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+  background-color: #fff;
+}
+
+.order-card h3 {
+  margin: 0 0 0.5rem;
+  color: #34495e;
+}
+
+.order-card p {
+  margin: 0.2rem 0;
+}
+
+.order-card ul {
+  margin-top: 0.5rem;
+  padding-left: 1rem;
+  list-style: disc;
+}
+
+.order-card li {
+  margin: 0.3rem 0;
+}
+
+.status {
+  padding: 0.2rem 0.6rem;
+  border-radius: 8px;
+  font-weight: bold;
+  color: white;
+}
+
+.status.pending {
+  background-color: #f39c12;
+}
+
+.status.confirmed {
+  background-color: #27ae60;
+}

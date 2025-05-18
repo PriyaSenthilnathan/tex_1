@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { FaSignOutAlt, FaTrash, FaShoppingCart, FaMinus, FaPlus } from "react-icons/fa";
 import "./cartPage.css";
 
-const cartPage = () => {
+const CartPage = () => {
     const [cartItems, setCartItems] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const [currentFabric, setCurrentFabric] = useState(null);
@@ -68,9 +68,9 @@ const cartPage = () => {
     };
 
     const handleUpdateQuantity = async (fabricId, newQuantity) => {
-        // Validate input
-        if (isNaN(newQuantity)) newQuantity = 1;
-        if (newQuantity < 1) newQuantity = 1;
+        // Convert to number and validate
+        newQuantity = parseInt(newQuantity);
+        if (isNaN(newQuantity) || newQuantity < 1) newQuantity = 1;
 
         setUpdatingItem(fabricId);
 
@@ -81,20 +81,21 @@ const cartPage = () => {
                 quantity: newQuantity
             });
 
-            if (response.data.success) {
-                setCartItems(prev => prev.map(item =>
-                    item.fabricId._id === fabricId ? { ...item, quantity: newQuantity } : item
-                ));
-            } else {
-                throw new Error(response.data.message || "Failed to update quantity");
-            }
+            setCartItems(prev => prev.map(item =>
+                item.fabricId._id === fabricId ? { ...item, quantity: newQuantity } : item
+            ));
         } catch (error) {
             console.error("Error updating quantity:", error);
             alert(error.response?.data?.message || "Failed to update quantity");
+            // Revert to previous quantity in UI
+            setCartItems(prev => prev.map(item =>
+                item.fabricId._id === fabricId ? { ...item, quantity: item.quantity } : item
+            ));
         } finally {
             setUpdatingItem(null);
         }
     };
+
     const handleOrder = (fabric) => {
         setCurrentFabric(fabric);
         setUserDetails(prev => ({
@@ -180,9 +181,10 @@ const cartPage = () => {
                 <div className="website-name">SaraswathiTex</div>
                 <nav className="nav-links">
                     <Link to="/UserDashboard">Home</Link>
-                    <Link to="/search-fabrics">Search Fabrics</Link>
+                    <Link to="/search-fabrics">Fabrics</Link>
                     <Link to="/favorites">Favourites</Link>
                     <Link to="/cart" className="active">Cart</Link>
+                    <Link to="/orders">My Orders</Link>
                     <Link to="/contact">Contact</Link>
                     <div className="logout-icon-div" onClick={handleLogout}>
                         <FaSignOutAlt />
@@ -206,15 +208,18 @@ const cartPage = () => {
                             {cartItems.map((item) => (
                                 <div key={item.fabricId._id} className="fabric-card">
                                     <img
-                                        src={item.fabricId.imageUrl ?
-                                            `http://localhost:5000/${item.fabricId.imageUrl}` : // Removed 'uploads/' if it's already in the path
-                                            "/default-fabric.jpg"
-                                        }
+                                        src={item.fabricId.imageUrl || '/default-fabric.jpg'}
                                         alt={item.fabricId.name}
                                         className="fabric-image"
                                         onError={(e) => {
                                             e.target.onerror = null;
-                                            e.target.src = "/default-fabric.jpg";
+                                            e.target.src = '/default-fabric.jpg';
+                                        }}
+                                        style={{
+                                            width: '265px',
+                                            height: '200px',
+                                            objectFit: 'cover',
+                                            border: '1px solid #ddd'
                                         }}
                                     />
                                     <div className="fabric-info">
@@ -314,9 +319,6 @@ const cartPage = () => {
                             </div>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="order-form">
-                            {/* ... rest of your modal form ... */}
-                        </form>
                     </div>
                 </div>
             )}
@@ -324,4 +326,4 @@ const cartPage = () => {
     );
 };
 
-export default cartPage;
+export default CartPage;

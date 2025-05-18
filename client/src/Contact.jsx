@@ -17,9 +17,10 @@ const Contact = () => {
         <div className="website-name">SaraswathiTex</div>
         <nav className="nav-links">
           <Link to="/UserDashBoard">Home</Link>
-          <Link to="/search-fabrics">Search Fabrics</Link>
+          <Link to="/search-fabrics">Fabrics</Link>
           <Link to="/favorites">Favorites</Link>
           <Link to="/cart">Cart</Link>
+          <Link to="/orders">My Orders</Link>
           <Link to="/contact">Contact</Link>
           <div className="logout-icon-div" onClick={handleLogout}>
             <FaSignOutAlt />

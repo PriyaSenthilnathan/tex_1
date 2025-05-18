@@ -10,8 +10,9 @@ import OrdersPage from "./OrdersPage.jsx";
 import UserDashBoard from "./UserDashBoard.jsx";
 import SearchFabric from "./SearchFabric.jsx";
 import FavoritesPage from "./FavouritesPage.jsx";
-import CartPage from "./cartPage.jsx";
+import CartPage from "./CartPage.jsx";
 import Contact from "./Contact.jsx";
+import OrderPage from "./Orders.jsx";
 
 const App = () => {
   return(
@@ -29,6 +30,8 @@ const App = () => {
       <Route path="/favorites" element={ <FavoritesPage /> } />
       <Route path="/cart" element={ <CartPage /> } />
       <Route path="/contact" element={<Contact />} />
+      <Route path="/orders" element={<OrderPage />} />
+
     </Routes>
   </Router>
   );
