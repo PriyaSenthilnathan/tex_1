@@ -56,17 +56,17 @@ const SearchFabric = () => {
     axios.get("http://localhost:5000/fabrics/search", {
       params: { q: activeSearchTerm }
     })
-    .then((response) => {
-      setFabrics(response.data);
-      setError(null);
-    })
-    .catch((error) => {
-      console.error("Error searching fabrics:", error);
-      setError("Failed to search fabrics. Please try again.");
-    })
-    .finally(() => {
-      setLoading(false);
-    });
+      .then((response) => {
+        setFabrics(response.data);
+        setError(null);
+      })
+      .catch((error) => {
+        console.error("Error searching fabrics:", error);
+        setError("Failed to search fabrics. Please try again.");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, [activeSearchTerm]);
 
   const handleSearch = () => {
@@ -142,50 +142,72 @@ const SearchFabric = () => {
   };
 
   const handleAddFavorite = async (fabricId) => {
-    if (!userEmail) {
-      alert("Please log in to add fabrics to favorites.");
-      navigate('/login');
-      return;
-    }
+  if (!userEmail) {
+    alert("Please log in to add fabrics to favorites.");
+    navigate('/login');
+    return;
+  }
+  
+  try {
+    const response = await axios.post("http://localhost:5000/favorites", { 
+      email: userEmail, 
+      fabricId 
+    });
     
-    try {
-      const response = await axios.post("http://localhost:5000/favorites", { 
-        email: userEmail, 
-        fabricId 
-      });
-      
-      alert(response.data.message || "Fabric added to favorites!");
-    } catch (error) {
-      console.error("Error adding to favorites:", error);
-      alert(error.response?.data.message || "Failed to add to favorites.");
+    if (response.data.success) {
+      alert(response.data.message || "Added to favorites!");
+    } else {
+      alert(response.data.message || "Failed to add to favorites");
     }
-  };
+  } catch (error) {
+    console.error("Error adding to favorites:", error);
+    alert(`Error: ${error.response?.data?.message || error.message}`);
+  }
+};
 
   const handleAddToCart = async (fabric) => {
-    if (!userEmail) {
-      alert("Please log in to add items to your cart.");
-      navigate('/login');
-      return;
-    }
-  
-    try {
-      const response = await axios.post("http://localhost:5000/cart", {
-        email: userEmail,
-        fabricId: fabric._id,
-        fabricName: fabric.name,
-        imageUrl: fabric.imageUrl,
-        color: fabric.color,
-        price: fabric.price,
-        description: fabric.description,
-        quantity: 1 // Default quantity
-      });
-      
+  if (!userEmail) {
+    alert("Please log in to add items to your cart.");
+    navigate('/login');
+    return;
+  }
+
+  try {
+    console.log('Adding to cart:', { 
+      fabricId: fabric._id,
+      name: fabric.name,
+      price: fabric.price 
+    });
+
+    const response = await axios.post("http://localhost:5000/cart", {
+      email: userEmail,
+      fabricId: fabric._id,
+      fabricName: fabric.name,
+      imageUrl: fabric.imageUrl,
+      color: fabric.color || 'Not Specified',
+      category: fabric.category,
+      price: fabric.price,
+      description: fabric.description
+    });
+    
+    if (response.data.success) {
       alert(response.data.message || "Item added to cart successfully!");
-    } catch (error) {
-      console.error("Error adding to cart:", error);
-      alert(error.response?.data.message || "Failed to add to cart.");
+    } else {
+      alert(response.data.message || "Unexpected response from server");
     }
-  };
+  } catch (error) {
+    console.error("Detailed cart error:", {
+      error: error.response?.data || error.message,
+      config: error.config
+    });
+    
+    alert(
+      error.response?.data?.message || 
+      error.message || 
+      "Failed to add to cart. Please check console for details."
+    );
+  }
+};
 
   const handleLogout = () => {
     const confirmLogout = window.confirm("Are you sure you want to logout?");
@@ -276,13 +298,13 @@ const SearchFabric = () => {
                 <p><strong>Description:</strong> {fabric.description}</p>
               </div>
               <div className="action-buttons">
-                <button 
+                <button
                   className="favorite-button"
                   onClick={() => handleAddFavorite(fabric._id)}
                 >
                   <FaHeart className="fav-icon" />
                 </button>
-                <button 
+                <button
                   className="cart-button"
                   onClick={() => handleAddToCart(fabric)}
                 >

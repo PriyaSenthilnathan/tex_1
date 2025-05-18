@@ -35,7 +35,12 @@ const CartPage = () => {
                 const response = await axios.get(`http://localhost:5000/cart`, {
                     params: { email: userEmail }
                 });
-                setCartItems(response.data);
+                
+                console.log('API Response:', response.data); // Debug log
+                
+                // Ensure we're using the data property from the response
+                const items = response.data?.success ? response.data.data : [];
+                setCartItems(Array.isArray(items) ? items : []);
                 setError(null);
             } catch (error) {
                 console.error("Error fetching cart items:", error);
@@ -49,17 +54,27 @@ const CartPage = () => {
         fetchCartItems();
     }, [userEmail]);
 
-    // Calculate cart summary values
-    const itemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
-    const subtotal = cartItems.reduce((total, item) => total + (item.fabricId.price * item.quantity), 0);
-    const total = subtotal; // Add shipping/tax if needed
+    // Calculate cart summary values with proper error handling
+    const itemCount = Array.isArray(cartItems) 
+        ? cartItems.reduce((total, item) => total + (item?.quantity || 0), 0) 
+        : 0;
+
+    const subtotal = Array.isArray(cartItems) 
+        ? cartItems.reduce((total, item) => {
+            const price = item?.fabricId?.price || 0;
+            const quantity = item?.quantity || 0;
+            return total + (price * quantity);
+        }, 0) 
+        : 0;
+
+    const total = subtotal;
 
     const handleRemoveFromCart = async (fabricId) => {
         try {
             await axios.delete("http://localhost:5000/cart", {
                 params: { email: userEmail, fabricId }
             });
-            setCartItems(prev => prev.filter(item => item.fabricId._id !== fabricId));
+            setCartItems(prev => prev.filter(item => item.fabricId?._id !== fabricId));
             alert("Item removed from cart");
         } catch (error) {
             console.error("Error removing from cart:", error);
@@ -68,29 +83,24 @@ const CartPage = () => {
     };
 
     const handleUpdateQuantity = async (fabricId, newQuantity) => {
-        // Convert to number and validate
         newQuantity = parseInt(newQuantity);
         if (isNaN(newQuantity) || newQuantity < 1) newQuantity = 1;
 
         setUpdatingItem(fabricId);
 
         try {
-            const response = await axios.put("http://localhost:5000/cart/update-quantity", {
+            await axios.put("http://localhost:5000/cart/update-quantity", {
                 email: userEmail,
                 fabricId,
                 quantity: newQuantity
             });
 
             setCartItems(prev => prev.map(item =>
-                item.fabricId._id === fabricId ? { ...item, quantity: newQuantity } : item
+                item.fabricId?._id === fabricId ? { ...item, quantity: newQuantity } : item
             ));
         } catch (error) {
             console.error("Error updating quantity:", error);
             alert(error.response?.data?.message || "Failed to update quantity");
-            // Revert to previous quantity in UI
-            setCartItems(prev => prev.map(item =>
-                item.fabricId._id === fabricId ? { ...item, quantity: item.quantity } : item
-            ));
         } finally {
             setUpdatingItem(null);
         }
@@ -113,10 +123,10 @@ const CartPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const totalPrice = currentFabric.fabricId.price * userDetails.quantity;
+            const totalPrice = currentFabric?.fabricId?.price * userDetails.quantity;
             const payload = {
-                fabricId: currentFabric.fabricId._id,
-                fabricName: currentFabric.fabricId.name,
+                fabricId: currentFabric?.fabricId?._id,
+                fabricName: currentFabric?.fabricId?.name,
                 userEmail,
                 userName: userDetails.name,
                 userAddress: userDetails.address,
@@ -130,7 +140,7 @@ const CartPage = () => {
 
             // Remove the ordered item from cart
             await axios.delete("http://localhost:5000/cart", {
-                params: { email: userEmail, fabricId: currentFabric.fabricId._id }
+                params: { email: userEmail, fabricId: currentFabric?.fabricId?._id }
             });
 
             alert("Order placed successfully!");
@@ -147,7 +157,7 @@ const CartPage = () => {
             const response = await axios.get(`http://localhost:5000/cart`, {
                 params: { email: userEmail }
             });
-            setCartItems(response.data);
+            setCartItems(response.data?.success ? response.data.data : []);
         } catch (error) {
             console.error("Error placing order:", error);
             alert("Failed to place order. Please try again.");
@@ -195,7 +205,7 @@ const CartPage = () => {
             <div className="cart-page-container">
                 <h2>Your Cart</h2>
 
-                {cartItems.length === 0 ? (
+                {!Array.isArray(cartItems) || cartItems.length === 0 ? (
                     <div className="no-items">
                         <p>Your cart is empty.</p>
                         <Link to="/search-fabrics" className="browse-link">
@@ -206,10 +216,10 @@ const CartPage = () => {
                     <>
                         <div className="fabrics-grid">
                             {cartItems.map((item) => (
-                                <div key={item.fabricId._id} className="fabric-card">
+                                <div key={item.fabricId?._id} className="fabric-card">
                                     <img
-                                        src={item.fabricId.imageUrl || '/default-fabric.jpg'}
-                                        alt={item.fabricId.name}
+                                        src={item.fabricId?.imageUrl || '/default-fabric.jpg'}
+                                        alt={item.fabricId?.name}
                                         className="fabric-image"
                                         onError={(e) => {
                                             e.target.onerror = null;
@@ -223,20 +233,20 @@ const CartPage = () => {
                                         }}
                                     />
                                     <div className="fabric-info">
-                                        <h3>{item.fabricId.name}</h3>
-                                        <p><strong>Color:</strong> {item.fabricId.color}</p>
-                                        <p><strong>Price:</strong> ₹{item.fabricId.price} per meter</p>
+                                        <h3>{item.fabricId?.name}</h3>
+                                        <p><strong>Color:</strong> {item.fabricId?.color}</p>
+                                        <p><strong>Price:</strong> ₹{item.fabricId?.price} per meter</p>
                                         <p className="fabric-description">
-                                            <strong>Description:</strong> {item.fabricId.description}
+                                            <strong>Description:</strong> {item.fabricId?.description}
                                         </p>
                                     </div>
                                     <div className="quantity-controls">
                                         <button
-                                            onClick={() => handleUpdateQuantity(item.fabricId._id, item.quantity - 1)}
-                                            disabled={item.quantity <= 1 || updatingItem === item.fabricId._id}
+                                            onClick={() => handleUpdateQuantity(item.fabricId?._id, item.quantity - 1)}
+                                            disabled={item.quantity <= 1 || updatingItem === item.fabricId?._id}
                                             className="quantity-btn"
                                         >
-                                            {updatingItem === item.fabricId._id && item.quantity === item.quantity ? '...' : <FaMinus />}
+                                            {updatingItem === item.fabricId?._id ? '...' : <FaMinus />}
                                         </button>
 
                                         <input
@@ -245,23 +255,23 @@ const CartPage = () => {
                                             value={item.quantity}
                                             onChange={(e) => {
                                                 const newValue = parseInt(e.target.value) || 1;
-                                                handleUpdateQuantity(item.fabricId._id, newValue);
+                                                handleUpdateQuantity(item.fabricId?._id, newValue);
                                             }}
                                             className="quantity-input"
-                                            disabled={updatingItem === item.fabricId._id}
+                                            disabled={updatingItem === item.fabricId?._id}
                                         />
 
                                         <button
-                                            onClick={() => handleUpdateQuantity(item.fabricId._id, item.quantity + 1)}
-                                            disabled={updatingItem === item.fabricId._id}
+                                            onClick={() => handleUpdateQuantity(item.fabricId?._id, item.quantity + 1)}
+                                            disabled={updatingItem === item.fabricId?._id}
                                             className="quantity-btn"
                                         >
-                                            {updatingItem === item.fabricId._id && item.quantity === item.quantity ? '...' : <FaPlus />}
+                                            {updatingItem === item.fabricId?._id ? '...' : <FaPlus />}
                                         </button>
                                     </div>
                                     <div className="action-buttons">
                                         <button
-                                            onClick={() => handleRemoveFromCart(item.fabricId._id)}
+                                            onClick={() => handleRemoveFromCart(item.fabricId?._id)}
                                             className="remove-button"
                                         >
                                             <FaTrash /> Remove
@@ -277,7 +287,6 @@ const CartPage = () => {
                             ))}
                         </div>
 
-                        {/* Attractive Cart Summary */}
                         <div className="cart-summary">
                             <h3 className="cart-summary-title">Order Summary</h3>
 
@@ -298,7 +307,8 @@ const CartPage = () => {
 
                             <button
                                 className="checkout-button"
-                                onClick={() => setShowModal(true)}
+                                onClick={() => cartItems.length > 0 && setShowModal(true)}
+                                disabled={cartItems.length === 0}
                             >
                                 Proceed to Checkout
                             </button>
@@ -311,14 +321,81 @@ const CartPage = () => {
                 <div className="modal-overlay">
                     <div className="modal-container">
                         <div className="modal-header">
-                            <h3>Order {currentFabric.fabricId.name}</h3>
+                            <h3>Order {currentFabric.fabricId?.name}</h3>
                             <div className="fabric-details">
-                                <span className="fabric-color" style={{ backgroundColor: currentFabric.fabricId.color.toLowerCase() }}></span>
-                                <span>Color: {currentFabric.fabricId.color}</span>
-                                <span>₹{currentFabric.fabricId.price} per meter</span>
+                                <span className="fabric-color" style={{ backgroundColor: currentFabric.fabricId?.color?.toLowerCase() }}></span>
+                                <span>Color: {currentFabric.fabricId?.color}</span>
+                                <span>₹{currentFabric.fabricId?.price} per meter</span>
                             </div>
                         </div>
 
+                        <form onSubmit={handleSubmit}>
+                            <div className="form-group">
+                                <label>Name</label>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    value={userDetails.name}
+                                    onChange={handleInputChange}
+                                    required
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Address</label>
+                                <textarea
+                                    name="address"
+                                    value={userDetails.address}
+                                    onChange={handleInputChange}
+                                    required
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Contact Number</label>
+                                <input
+                                    type="tel"
+                                    name="contact"
+                                    value={userDetails.contact}
+                                    onChange={handleInputChange}
+                                    required
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Quantity (meters)</label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    name="quantity"
+                                    value={userDetails.quantity}
+                                    onChange={handleInputChange}
+                                    required
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Payment Method</label>
+                                <select
+                                    name="paymentMethod"
+                                    value={userDetails.paymentMethod}
+                                    onChange={handleInputChange}
+                                    required
+                                >
+                                    <option value="Cash on Delivery">Cash on Delivery</option>
+                                    <option value="UPI">UPI</option>
+                                    <option value="Credit Card">Credit Card</option>
+                                </select>
+                            </div>
+                            <div className="modal-actions">
+                                <button
+                                    type="button"
+                                    className="cancel-button"
+                                    onClick={() => setShowModal(false)}
+                                >
+                                    Cancel
+                                </button>
+                                <button type="submit" className="confirm-button">
+                                    Confirm Order
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}

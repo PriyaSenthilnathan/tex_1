@@ -309,63 +309,45 @@ app.get('/favorites', async (req, res) => {
   }
 });
 
+// Example fix pattern
+// In server.js, replace the example fix pattern with this:
 app.post('/favorites', async (req, res) => {
-  const { userId, productId } = req.body;
-  try {
-    const userFavorites = await Favorite.findOneAndUpdate(
-      { user: userId },
-      { $addToSet: { products: productId } },
-      { upsert: true, new: true }
-    );
-    res.status(200).json(userFavorites);
-  } catch (err) {
-    res.status(500).json({ error: 'Server error' });
-  }
   try {
     const { email, fabricId } = req.body;
     
     if (!email || !fabricId) {
-      return res.status(400).json({ message: 'Email and fabricId are required' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Email and fabricId are required' 
+      });
     }
 
-    // Check if fabric exists
-    const fabric = await Fabric.findById(fabricId);
-    if (!fabric) {
-      return res.status(404).json({ message: 'Fabric not found' });
+    // Check if already in favorites
+    const existingFavorite = await Favorite.findOne({ email, fabricId });
+    if (existingFavorite) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'This fabric is already in your favorites' 
+      });
     }
 
-    // Check if already favorited
-    const existing = await Favorite.findOne({ email, fabricId });
-    if (existing) {
-      return res.status(400).json({ message: 'This fabric is already in your favorites' });
-    }
-
-    const favorite = new Favorite({
-      email,
-      fabricId,
-      createdAt: new Date()
-    });
-
-    await favorite.save();
-    
-    // Populate the fabric data in the response
-    const populatedFavorite = await Favorite.findById(favorite._id).populate('fabricId');
+    // Add to favorites
+    const newFavorite = new Favorite({ email, fabricId });
+    await newFavorite.save();
     
     res.status(201).json({ 
-      message: 'Fabric added to favorites',
-      favorite: {
-        ...populatedFavorite.toObject(),
-        fabricId: {
-          ...populatedFavorite.fabricId.toObject(),
-          imageUrl: populatedFavorite.fabricId.imageUrl 
-            ? `${req.protocol}://${req.get('host')}${populatedFavorite.fabricId.imageUrl}`
-            : null
-        }
-      }
+      success: true,
+      message: 'Added to favorites',
+      favorite: newFavorite 
     });
+    
   } catch (err) {
     console.error('Error adding to favorites:', err);
-    res.status(500).json({ message: 'Error adding to favorites', error: err.message });
+    res.status(500).json({ 
+      success: false,
+      message: 'Error adding to favorites',
+      error: err.message 
+    });
   }
 });
 
@@ -395,10 +377,11 @@ const cartSchema = new mongoose.Schema({
   email: { type: String, required: true },
   fabricId: { type: mongoose.Schema.Types.ObjectId, ref: 'Fabric', required: true },
   fabricName: { type: String, required: true },
-  color: { type: String, required: true },
-  category: { type: String, required: true },
+  color: { type: String, required: true, default: 'Not Specified' },
+  category: { type: String },
   imageUrl: { type: String },
   price: { type: Number, required: true },
+  description: { type: String },
   quantity: { type: Number, default: 1 },
   createdAt: { type: Date, default: Date.now }
 });
@@ -406,90 +389,79 @@ const cartSchema = new mongoose.Schema({
 const Cart = mongoose.model('Cart', cartSchema);
 
 // Add to Cart
+// In server.js, update the cart endpoint:
 app.post('/cart', async (req, res) => {
   try {
-    const { email, fabricId, fabricName, color, category, imageUrl, price } = req.body;
+    const { email, fabricId, fabricName, color, price } = req.body;
     
-    // Check if already in cart
-    let cartItem = await Cart.findOne({ email, fabricId });
-    
-    if (cartItem) {
-      cartItem.quantity += 1;
-      await cartItem.save();
-    } else {
-      cartItem = new Cart({
-        email,
-        fabricId,
-        fabricName,
-        color,
-        category,
-        imageUrl,
-        price,
-        quantity: 1
+    // Required field validation
+    if (!email || !fabricId || !fabricName || !price) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields'
       });
-      await cartItem.save();
     }
-    
-    res.json({ message: 'Added to cart', cartItem });
+
+    // Create or update cart item
+    let cartItem = await Cart.findOneAndUpdate(
+      { email, fabricId },
+      {
+        $setOnInsert: {
+          color: color || 'Not specified',
+          // other default fields...
+        },
+        $inc: { quantity: 1 }
+      },
+      { 
+        upsert: true,
+        new: true,
+        setDefaultsOnInsert: true 
+      }
+    );
+
+    res.json({
+      success: true,
+      message: 'Added to cart successfully',
+      cartItem
+    });
+
   } catch (err) {
-    console.error('Error adding to cart:', err);
-    res.status(500).json({ message: 'Error adding to cart', error: err.message });
+    console.error('Cart Error:', err);
+    res.status(500).json({
+      success: false,
+      message: err.message
+    });
   }
 });
 
 // Get Cart Items - Fixed Version
 // Enhanced cart items endpoint with better error handling
+// In server.js
 app.get('/cart', async (req, res) => {
   try {
     const { email } = req.query;
+    
     if (!email) {
       return res.status(400).json({ 
         success: false,
-        message: 'Email is required'
+        message: 'Email is required' 
       });
     }
 
     const cartItems = await Cart.find({ email })
-      .populate({
-        path: 'fabricId',
-        select: 'name color imageUrl price description'
-      })
+      .populate('fabricId', 'name price imageUrl color description')
       .lean();
 
-    const processedItems = cartItems.map(item => {
-      // Handle cases where fabric might be deleted but still in cart
-      if (!item.fabricId) {
-        return {
-          ...item,
-          fabricId: {
-            _id: 'deleted-item',
-            name: '[Deleted Product]',
-            color: 'N/A',
-            price: 0,
-            description: 'This product is no longer available',
-            imageUrl: null
-          }
-        };
+    // Process image URLs
+    const processedItems = cartItems.map(item => ({
+      ...item,
+      fabricId: {
+        ...item.fabricId,
+        imageUrl: item.fabricId?.imageUrl 
+          ? `http://localhost:5000${item.fabricId.imageUrl}`
+          : null
       }
-
-      // Normalize image URL (handle various path formats)
-      let imageUrl = null;
-      if (item.fabricId.imageUrl) {
-        // Remove any leading/trailing slashes or duplicate uploads folders
-        const normalizedPath = item.fabricId.imageUrl
-          .replace(/^\/+/, '')
-          .replace(/^uploads\/+/, '');
-        imageUrl = `http://localhost:5000/uploads/${normalizedPath}`;
-      }
-
-      return {
-        ...item,
-        fabricId: {
-          ...item.fabricId,
-          imageUrl: imageUrl || '/default-fabric.jpg' // Fallback to default
-        }
-      };
-    });
+    }));
 
     res.json({
       success: true,
@@ -500,8 +472,7 @@ app.get('/cart', async (req, res) => {
     console.error('Cart fetch error:', err);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch cart items',
-      error: err.message
+      message: 'Failed to fetch cart items'
     });
   }
 });
