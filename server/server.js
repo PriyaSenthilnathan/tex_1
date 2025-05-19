@@ -32,6 +32,22 @@ mongoose.connect(process.env.MONGODB_URI, {
   .then(() => console.log('Connected to MongoDB Atlas'))
   .catch(err => console.error('MongoDB connection error:', err));
 
+  // Add these near the top with other requires
+const paypal = require('@paypal/checkout-server-sdk');
+
+// Configure PayPal environment
+const configurePayPal = () => {
+  const clientId = process.env.PAYPAL_CLIENT_ID;
+  const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
+
+  if (process.env.NODE_ENV === 'production') {
+    return new paypal.core.LiveEnvironment(clientId, clientSecret);
+  }
+  return new paypal.core.SandboxEnvironment(clientId, clientSecret);
+};
+
+const paypalClient = new paypal.core.PayPalHttpClient(configurePayPal());
+
 // User Schema
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true },
@@ -54,20 +70,26 @@ const fabricSchema = new mongoose.Schema({
 const Fabric = mongoose.model('Fabric', fabricSchema);
 
 // Order Schema
+// Update your Order schema to include:
 const orderSchema = new mongoose.Schema({
-  fabricId: String,
-  fabricName: String,
-  color: String,
-  category: String,  
-  pricePerMeter: Number,  
-  userName: String,
-  userAddress: String,
-  userContact: String,
+  fabricId: { type: mongoose.Schema.Types.ObjectId, ref: 'Fabric' },
+  fabricName: { type: String, required: true },
+  color: { type: String },
+  category: { type: String },
+  imageUrl: { type: String },
+  userEmail: { type: String, required: true },
+  userName: { type: String, required: true },
+  userAddress: { type: String, required: true },
+  userContact: { type: String, required: true },
   quantity: { type: Number, default: 1 },
+  pricePerMeter: { type: Number, required: true },
   totalPrice: { type: Number, required: true },
-  paymentMethod: { type: String, required: true }, 
-  orderTime: { type: Date, default: Date.now },
-});
+  paymentMethod: { type: String, required: true },
+  paymentStatus: { type: String, default: 'Pending' },
+  paypalOrderId: { type: String },
+  orderStatus: { type: String, default: 'Processing' },
+  orderTime: { type: Date, default: Date.now }
+}, { timestamps: true });
 
 const Order = mongoose.model('Order', orderSchema);
 
@@ -551,48 +573,125 @@ app.delete('/cart', async (req, res) => {
 });
 
 // Order endpoint (update this existing route)
-app.post('/orders', async (req, res) => {
+// Verify PayPal payment
+app.post('/verify-payment', async (req, res) => {
   try {
-    const { 
-      fabricId,
-      fabricName,
-      userEmail,
-      userName,
-      userAddress,
-      userContact,
-      quantity,
-      paymentMethod,
-      totalPrice
-    } = req.body;
-
-    // Validate required fields
-    if (!fabricId || !userEmail || !userName || !userAddress || !userContact || !quantity || !paymentMethod) {
-      return res.status(400).json({ message: 'All fields are required' });
+    const { orderID } = req.body;
+    
+    const request = new paypal.orders.OrdersGetRequest(orderID);
+    const response = await paypalClient.execute(request);
+    
+    if (response.result.status !== 'COMPLETED') {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Payment not completed' 
+      });
     }
 
-    // Create new order
-    const newOrder = new Order({
-      fabricId,
-      fabricName,
-      userEmail,
-      userName,
-      userAddress,
-      userContact,
-      quantity: Number(quantity),
-      totalPrice: Number(totalPrice),
-      paymentMethod
-    });
-
-    await newOrder.save();
-    
-
-    res.status(201).json({ 
-      message: 'Order placed successfully',
-      order: newOrder
+    res.json({ 
+      success: true,
+      order: response.result 
     });
   } catch (err) {
-    console.error('Error placing order:', err);
-    res.status(500).json({ message: 'Error placing order', error: err.message });
+    console.error('Payment verification error:', err);
+    res.status(500).json({ 
+      success: false,
+      message: 'Payment verification failed',
+      error: err.message 
+    });
+  }
+});
+
+// Bulk order creation
+app.post('/orders/bulk', async (req, res) => {
+  try {
+    const { orders } = req.body;
+    
+    if (!orders || !Array.isArray(orders) || orders.length === 0) {
+      return res.status(400).json({ message: 'Invalid order data' });
+    }
+
+    const createdOrders = await Order.insertMany(orders);
+    
+    res.status(201).json({ 
+      message: 'Orders placed successfully',
+      orders: createdOrders
+    });
+  } catch (err) {
+    console.error('Error placing bulk orders:', err);
+    res.status(500).json({ message: 'Error placing orders', error: err.message });
+  }
+});
+
+// Bulk cart removal
+app.delete('/cart/bulk', async (req, res) => {
+  try {
+    const { email, fabricIds } = req.body;
+    
+    if (!email || !fabricIds || !Array.isArray(fabricIds)) {
+      return res.status(400).json({ message: 'Email and fabricIds are required' });
+    }
+
+    const result = await Cart.deleteMany({ 
+      email, 
+      fabricId: { $in: fabricIds } 
+    });
+    
+    res.json({ 
+      message: 'Items removed from cart',
+      deletedCount: result.deletedCount
+    });
+  } catch (err) {
+    console.error('Error bulk removing from cart:', err);
+    res.status(500).json({ message: 'Error removing items', error: err.message });
+  }
+});
+
+// Verify PayPal payment
+app.post('/verify-payment', async (req, res) => {
+  try {
+    const { orderID } = req.body;
+    
+    const request = new paypal.orders.OrdersGetRequest(orderID);
+    const response = await paypalClient.execute(request);
+    
+    if (response.result.status !== 'COMPLETED') {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Payment not completed' 
+      });
+    }
+
+    res.json({ 
+      success: true,
+      order: response.result 
+    });
+  } catch (err) {
+    console.error('Payment verification error:', err);
+    res.status(500).json({ 
+      success: false,
+      message: 'Payment verification failed',
+      error: err.message 
+    });
+  }
+});
+
+// Get user orders
+app.get('/user-orders', async (req, res) => {
+  try {
+    const { email } = req.query;
+    
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+
+    const orders = await Order.find({ userEmail: email })
+      .sort({ orderTime: -1 });
+    
+    res.json(orders);
+  } catch (err) {
+    console.error('Error fetching user orders:', err);
+    res.status(500).json({ message: 'Error fetching orders', error: err.message });
   }
 });
 

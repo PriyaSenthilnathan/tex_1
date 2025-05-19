@@ -8,28 +8,28 @@ import 'react-toastify/dist/ReactToastify.css';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import './home.css';
-
+import fab1 from '/src/assets/fab1.jpg';
+import fab2 from '/src/assets/fab2.jpg';
+import fab3 from '/src/assets/fab3.jpg';
 
 const carouselImages = [
   {
     id: 1,
-    url: 'https://images.unsplash.com/photo-1562158070-57b51f162b4b?auto=format&fit=crop&w=1350&q=80',
-    alt: 'Cotton Collection - Flat 30% Off',
-    caption: 'Cotton Collection - Flat 30% Off'
+    src: fab1,
+    alt: 'Image 1 description',
   },
   {
     id: 2,
-    url: 'https://images.unsplash.com/photo-1593032465171-d19c7b9e0979?auto=format&fit=crop&w=1350&q=80',
-    alt: 'Silk Elegance - Up to 40% Off',
-    caption: 'Silk Elegance - Up to 40% Off'
+    src: fab2,
+    alt: 'Image 2 description',
   },
   {
     id: 3,
-    url: 'https://images.unsplash.com/photo-1616486599105-7eb1fa89b6ec?auto=format&fit=crop&w=1350&q=80',
-    alt: 'Linen Love - New Arrivals',
-    caption: 'Linen Love - New Arrivals'
-  }
+    src: fab3,
+    alt: 'Image 3 description',
+  },
 ];
+
 
 const categories = [
   "Cotton",
@@ -179,7 +179,7 @@ const HomePage = () => {
         <Slider {...carouselSettings}>
           {carouselImages.map((image) => (
             <div key={image.id} className="carousel-slide">
-              <img src={image.url} alt={image.alt} className="carousel-image" />
+              <img src={image.src} alt={image.alt} className="carousel-image" />
               <div className="carousel-caption">{image.caption}</div>
             </div>
           ))}
