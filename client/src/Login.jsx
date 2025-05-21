@@ -76,7 +76,7 @@ const Login = () => {
         <Link to="/">Home</Link>
         <Link to="/login"><FaUser /> Login</Link>
         <Link to="/cart"><FaShoppingCart /> Cart</Link>
-        <Link to="/contact">Contact</Link>
+        <Link to="/contacts">Contact</Link>
       </nav>
     </div>
 

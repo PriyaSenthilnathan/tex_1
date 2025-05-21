@@ -607,19 +607,74 @@ app.post('/orders/bulk', async (req, res) => {
   try {
     const { orders } = req.body;
     
-    if (!orders || !Array.isArray(orders) || orders.length === 0) {
-      return res.status(400).json({ message: 'Invalid order data' });
+    // More thorough validation
+    if (!orders || !Array.isArray(orders)) {
+      return res.status(400).json({ message: 'Orders must be an array' });
+    }
+    
+    if (orders.length === 0) {
+      return res.status(400).json({ message: 'Orders array cannot be empty' });
     }
 
-    const createdOrders = await Order.insertMany(orders);
+    // Validate each order (adjust according to your Order schema)
+    const validationErrors = [];
+    orders.forEach((order, index) => {
+      if (!order.items || order.items.length === 0) {
+        validationErrors.push(`Order at index ${index} has no items`);
+      }
+      // Add other validations as needed
+    });
+
+    if (validationErrors.length > 0) {
+      return res.status(400).json({ 
+        message: 'Validation failed',
+        errors: validationErrors 
+      });
+    }
+
+    // Database operation with timeout handling
+    const createdOrders = await Promise.race([
+      Order.insertMany(orders),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Database operation timed out')), 5000)
+      )
+    ]);
     
     res.status(201).json({ 
       message: 'Orders placed successfully',
+      orderCount: createdOrders.length,
       orders: createdOrders
     });
+    
   } catch (err) {
-    console.error('Error placing bulk orders:', err);
-    res.status(500).json({ message: 'Error placing orders', error: err.message });
+    console.error('Error placing bulk orders:', {
+      error: err,
+      stack: err.stack,
+      requestBody: req.body // Be careful with logging sensitive data
+    });
+    
+    // More specific error responses
+    if (err.message.includes('timed out')) {
+      return res.status(504).json({ message: 'Database operation timed out' });
+    }
+    
+    if (err.name === 'ValidationError') {
+      return res.status(400).json({ 
+        message: 'Data validation failed',
+        details: err.errors 
+      });
+    }
+    
+    if (err.code === 11000) { // MongoDB duplicate key
+      return res.status(409).json({ 
+        message: 'Duplicate order detected' 
+      });
+    }
+    
+    res.status(500).json({ 
+      message: 'Failed to process orders',
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 });
 

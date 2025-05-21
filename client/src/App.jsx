@@ -12,6 +12,7 @@ import SearchFabric from "./SearchFabric.jsx";
 import FavoritesPage from "./FavouritesPage.jsx";
 import CartPage from "./CartPage.jsx";
 import Contact from "./Contact.jsx";
+import ContactPage from "./Contacts.jsx";
 import OrderPage from "./Orders.jsx";
 
 const App = () => {
@@ -30,6 +31,7 @@ const App = () => {
       <Route path="/favorites" element={ <FavoritesPage /> } />
       <Route path="/cart" element={ <CartPage /> } />
       <Route path="/contact" element={<Contact />} />
+      <Route path="/contacts" element={ <ContactPage />} />
       <Route path="/orders" element={<OrderPage />} />
 
     </Routes>

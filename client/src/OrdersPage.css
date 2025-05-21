@@ -120,3 +120,143 @@ h2 {
 .logout-icon-div:hover {
   color: #e74c3c;
 }
+
+/* Container for the entire orders page */
+.orders-page-container {
+  padding: 40px 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  max-width: 1400px;
+  margin: 80px auto 0;
+  background-color: #fdfdfd;
+}
+
+/* Section heading */
+h2 {
+  text-align: center;
+  margin-bottom: 40px;
+  color: #2c3e50;
+  font-size: 2.2rem;
+  font-weight: 700;
+}
+
+/* Orders grid layout */
+.orders-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 30px;
+}
+
+/* Individual order card */
+.order-item {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  word-break: break-word;
+}
+
+.order-item:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Order card title */
+.order-item h3 {
+  margin-bottom: 20px;
+  font-size: 1.4rem;
+  color: #2c3e50;
+  border-bottom: 3px solid #f39c12;
+  padding-bottom: 12px;
+}
+
+/* Order card text */
+.order-item p {
+  margin: 12px 0;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #444;
+}
+
+.order-item p strong {
+  font-weight: 600;
+  color: #222;
+  display: inline-block;
+  min-width: 130px;
+}
+
+/* Responsive layout */
+@media (max-width: 1200px) {
+  .orders-list {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .orders-list {
+    grid-template-columns: 1fr;
+  }
+
+  .order-item {
+    padding: 24px;
+  }
+}
+
+/* Main home container */
+.home-container {
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+/* Navbar styling */
+.navbar {
+  background-color: #2c3e50;
+  color: #fff;
+  padding: 15px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+/* Website name */
+.website-name {
+  font-size: 1.6rem;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+/* Navigation links */
+.nav-links {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+.nav-links a {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.3s;
+}
+
+.nav-links a:hover {
+  color: #f39c12;
+}
+
+/* Logout icon styling */
+.logout-icon-div {
+  color: white;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.logout-icon-div:hover {
+  color: #e74c3c;
+}

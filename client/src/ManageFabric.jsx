@@ -2,13 +2,12 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import './ManageFabric.css';
-import { FaSignOutAlt } from "react-icons/fa"; // Import logout icon
-import './LogoutButton.css'; // Optional: Add specific styles for the div
+import { FaSignOutAlt } from "react-icons/fa"; 
+import './LogoutButton.css'; 
 
 const ManageFabric = () => {
   const [fabrics, setFabrics] = useState([]);
   const [name, setName] = useState('');
-  const [material, setMaterial] = useState('');
   const [color, setColor] = useState('');
   const [category, setCategory] = useState('');
   const [price, setPrice] = useState('');
@@ -18,7 +17,7 @@ const ManageFabric = () => {
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
 
-  const apiUrl = 'http://localhost:5000/fabrics'; // Update API endpoint
+  const apiUrl = 'http://localhost:5000/fabrics';
 
   useEffect(() => {
     axios.get(apiUrl)
@@ -72,7 +71,7 @@ const ManageFabric = () => {
     setCategory(fabric.category);
     setPrice(fabric.price);
     setDescription(fabric.description);
-    setImageFile(null); // Reset image file when editing
+    setImageFile(null);
   };
 
   const handleUpdateFabric = () => {
