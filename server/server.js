@@ -312,17 +312,23 @@ app.get('/favorites', async (req, res) => {
     const favorites = await Favorite.find({ email })
       .populate('fabricId')
       .lean();
-    
-    // Map to include full image URLs
-    const favoritesWithUrls = favorites.map(fav => ({
-      ...fav,
-      fabricId: {
-        ...fav.fabricId,
-        imageUrl: fav.fabricId.imageUrl 
-          ? `${req.protocol}://${req.get('host')}${fav.fabricId.imageUrl}`
-          : null
+
+    const favoritesWithUrls = favorites.map(fav => {
+      if (!fav.fabricId) {
+        // Fabric was deleted or missing, handle gracefully:
+        return { ...fav, fabricId: null };
       }
-    }));
+      
+      return {
+        ...fav,
+        fabricId: {
+          ...fav.fabricId,
+          imageUrl: fav.fabricId.imageUrl 
+            ? `${req.protocol}://${req.get('host')}${fav.fabricId.imageUrl}`
+            : null
+        }
+      };
+    });
     
     res.json(favoritesWithUrls);
   } catch (err) {
@@ -330,6 +336,7 @@ app.get('/favorites', async (req, res) => {
     res.status(500).json({ message: 'Error fetching favorites', error: err.message });
   }
 });
+
 
 // Example fix pattern
 // In server.js, replace the example fix pattern with this:

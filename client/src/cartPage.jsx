@@ -4,8 +4,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { FaSignOutAlt, FaTrash, FaShoppingCart, FaMinus, FaPlus } from "react-icons/fa";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { FaPaypal, FaMoneyBillWave } from 'react-icons/fa';
-
 import "./cartPage.css";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
 const CartPage = () => {
     const [cartItems, setCartItems] = useState([]);
@@ -27,70 +28,95 @@ const CartPage = () => {
     const navigate = useNavigate();
 
     const initialOptions = {
-        "client-id": import.meta.env.VITE_PAYPAL_CLIENT_ID,
+        "client-id": import.meta.env.VITE_PAYPAL_CLIENT_ID || "test", // Use test client ID if not set
         currency: "USD",
         intent: "capture",
     };
 
     // Fetch cart items
     useEffect(() => {
-         const fetchCartItems = async () => {
         if (!userEmail) {
-            navigate("/login"); // Redirect unauthenticated user
+            navigate("/login");
             return;
         }
 
-        try {
-            setLoading(true);
-            const response = await axios.get(`http://localhost:5000/cart`, {
-                params: { email: userEmail }
-            });
-            setCartItems(response.data?.data || []);
-        } catch (error) {
-            console.error("Error fetching cart items:", error);
-            setError("Failed to load cart items");
-        } finally {
-            setLoading(false);
-        }
-    };
+        const fetchCartItems = async () => {
+            try {
+                setLoading(true);
+                const response = await axios.get(`${API_BASE_URL}/cart`, {
+                    params: { email: userEmail },
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                // Handle different response structures
+                if (response.data && Array.isArray(response.data)) {
+                    setCartItems(response.data);
+                } else if (response.data?.data && Array.isArray(response.data.data)) {
+                    setCartItems(response.data.data);
+                } else {
+                    setCartItems([]);
+                }
+            } catch (error) {
+                console.error("Error fetching cart items:", error);
+                setError("Failed to load cart items. Please try again later.");
+            } finally {
+                setLoading(false);
+            }
+        };
 
         fetchCartItems();
-    }, [userEmail]);
+    }, [userEmail, navigate]);
 
     // Calculate totals
     const itemCount = cartItems.reduce((total, item) => total + (item?.quantity || 0), 0);
-    const subtotal = cartItems.reduce((total, item) => total + (item?.fabricId?.price || 0) * (item?.quantity || 0), 0);
+    const subtotal = cartItems.reduce((total, item) => {
+        const price = item?.fabricId?.price || item?.price || 0;
+        const quantity = item?.quantity || 0;
+        return total + (price * quantity);
+    }, 0);
     const total = subtotal;
 
     // Cart operations
     const handleRemoveFromCart = async (fabricId) => {
+        if (!window.confirm("Are you sure you want to remove this item?")) return;
+        
         try {
-            await axios.delete("http://localhost:5000/cart", {
-                params: { email: userEmail, fabricId }
+            await axios.delete(`${API_BASE_URL}/cart`, {
+                params: { email: userEmail, fabricId },
+                headers: {
+                    'Content-Type': 'application/json',
+                }
             });
             setCartItems(prev => prev.filter(item => item.fabricId?._id !== fabricId));
         } catch (error) {
             console.error("Error removing from cart:", error);
-            alert("Failed to remove from cart");
+            alert("Failed to remove item from cart. Please try again.");
         }
     };
 
     const handleUpdateQuantity = async (fabricId, newQuantity) => {
-        newQuantity = Math.max(1, parseInt(newQuantity) || 1);
+        newQuantity = Math.max(1, Math.min(100, parseInt(newQuantity) || 1));
         setUpdatingItem(fabricId);
 
         try {
-            await axios.put("http://localhost:5000/cart/update-quantity", {
+            await axios.put(`${API_BASE_URL}/cart/update-quantity`, {
                 email: userEmail,
                 fabricId,
                 quantity: newQuantity
+            }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                }
             });
+            
             setCartItems(prev => prev.map(item =>
                 item.fabricId?._id === fabricId ? { ...item, quantity: newQuantity } : item
             ));
         } catch (error) {
             console.error("Error updating quantity:", error);
-            alert("Failed to update quantity");
+            alert("Failed to update quantity. Please try again.");
         } finally {
             setUpdatingItem(null);
         }
@@ -115,34 +141,53 @@ const CartPage = () => {
         setOrderProcessing(true);
         try {
             const orderPayload = items.map(item => ({
-                fabricId: item.fabricId?._id,
-                fabricName: item.fabricId?.name,
+                fabricId: item.fabricId?._id || item._id,
+                fabricName: item.fabricId?.name || item.name,
                 userEmail,
                 userName: userDetails.name,
                 userAddress: userDetails.address,
                 userContact: userDetails.contact,
-                quantity: item.quantity,
+                quantity: currentFabric ? parseInt(userDetails.quantity) : item.quantity,
                 paymentMethod: userDetails.paymentMethod,
-                totalPrice: item.fabricId?.price * item.quantity,
+                totalPrice: (item.fabricId?.price || item.price) * 
+                          (currentFabric ? parseInt(userDetails.quantity) : item.quantity),
                 ...(paypalOrderId && { paypalOrderId })
             }));
 
             // Create orders
-            await axios.post("http://localhost:5000/orders/bulk", { orders: orderPayload });
+            await axios.post(`${API_BASE_URL}/orders/bulk`, { orders: orderPayload }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
 
             // Clear cart
-            await axios.delete("http://localhost:5000/cart/bulk", {
+            await axios.delete(`${API_BASE_URL}/cart/bulk`, {
                 data: {
                     email: userEmail,
-                    fabricIds: items.map(item => item.fabricId?._id)
+                    fabricIds: items.map(item => item.fabricId?._id || item._id)
+                },
+                headers: {
+                    'Content-Type': 'application/json',
                 }
             });
 
             // Refresh cart
-            const response = await axios.get(`http://localhost:5000/cart`, {
-                params: { email: userEmail }
+            const response = await axios.get(`${API_BASE_URL}/cart`, {
+                params: { email: userEmail },
+                headers: {
+                    'Content-Type': 'application/json',
+                }
             });
-            setCartItems(response.data?.data || []);
+            
+            // Handle response as before
+            if (response.data && Array.isArray(response.data)) {
+                setCartItems(response.data);
+            } else if (response.data?.data && Array.isArray(response.data.data)) {
+                setCartItems(response.data.data);
+            } else {
+                setCartItems([]);
+            }
 
             alert("Order placed successfully!");
             setShowModal(false);
@@ -155,7 +200,7 @@ const CartPage = () => {
             });
         } catch (error) {
             console.error("Error placing order:", error);
-            alert("Failed to place order");
+            alert("Failed to place order. Please try again.");
         } finally {
             setOrderProcessing(false);
         }
@@ -164,7 +209,11 @@ const CartPage = () => {
     // PayPal handlers
     const createPayPalOrder = (data, actions) => {
         const items = currentFabric ? [currentFabric] : cartItems;
-        const total = items.reduce((sum, item) => sum + (item.fabricId?.price * item.quantity), 0);
+        const total = items.reduce((sum, item) => {
+            const price = item.fabricId?.price || item.price || 0;
+            const quantity = currentFabric ? parseInt(userDetails.quantity) : item.quantity;
+            return sum + (price * quantity);
+        }, 0);
 
         return actions.order.create({
             purchase_units: [{
@@ -179,12 +228,12 @@ const CartPage = () => {
                     }
                 },
                 items: items.map(item => ({
-                    name: item.fabricId?.name,
+                    name: item.fabricId?.name || item.name,
                     unit_amount: {
-                        value: item.fabricId?.price.toFixed(2),
+                        value: (item.fabricId?.price || item.price).toFixed(2),
                         currency_code: "USD"
                     },
-                    quantity: item.quantity.toString()
+                    quantity: (currentFabric ? userDetails.quantity : item.quantity).toString()
                 }))
             }]
         });
@@ -196,7 +245,7 @@ const CartPage = () => {
             await processOrder(currentFabric ? [currentFabric] : cartItems, details.id);
         } catch (error) {
             console.error("PayPal error:", error);
-            alert("Payment processing failed");
+            alert("Payment processing failed. Please try again or use another method.");
         }
     };
 
@@ -212,10 +261,20 @@ const CartPage = () => {
             navigate("/login");
         }
     };
-    
 
-    if (loading) return <div className="loading">Loading...</div>;
-    if (error) return <div className="error">{error}</div>;
+    if (loading) return (
+        <div className="loading-container">
+            <div className="spinner"></div>
+            <p>Loading your cart...</p>
+        </div>
+    );
+
+    if (error) return (
+        <div className="error-container">
+            <p>{error}</p>
+            <button onClick={() => window.location.reload()}>Retry</button>
+        </div>
+    );
 
     return (
         <div className="cart-page">
@@ -245,27 +304,36 @@ const CartPage = () => {
                     <>
                         <div className="cart-items">
                             {cartItems.map(item => (
-                                <div key={item.fabricId?._id} className="cart-item">
-                                    <img src={item.fabricId?.imageUrl} alt={item.fabricId?.name} />
+                                <div key={item.fabricId?._id || item._id} className="cart-item">
+                                    <img 
+                                        src={item.fabricId?.imageUrl || item.imageUrl} 
+                                        alt={item.fabricId?.name || item.name} 
+                                        onError={(e) => {
+                                            e.target.onerror = null;
+                                            e.target.src = "https://via.placeholder.com/150?text=No+Image";
+                                        }}
+                                    />
                                     <div className="item-details">
-                                        <h3>{item.fabricId?.name}</h3>
-                                        <p className="price">₹{item.fabricId?.price}</p>
+                                        <h3>{item.fabricId?.name || item.name}</h3>
+                                        <p className="price">₹{item.fabricId?.price || item.price}</p>
                                         <div className="quantity-control">
                                             <button
-                                                onClick={() => handleUpdateQuantity(item.fabricId?._id, item.quantity - 1)}
-                                                disabled={item.quantity <= 1 || updatingItem === item.fabricId?._id}
+                                                onClick={() => handleUpdateQuantity(item.fabricId?._id || item._id, item.quantity - 1)}
+                                                disabled={item.quantity <= 1 || updatingItem === (item.fabricId?._id || item._id)}
                                             >
                                                 <FaMinus />
                                             </button>
                                             <input
                                                 type="number"
                                                 value={item.quantity}
-                                                onChange={(e) => handleUpdateQuantity(item.fabricId?._id, e.target.value)}
-                                                disabled={updatingItem === item.fabricId?._id}
+                                                onChange={(e) => handleUpdateQuantity(item.fabricId?._id || item._id, e.target.value)}
+                                                disabled={updatingItem === (item.fabricId?._id || item._id)}
+                                                min="1"
+                                                max="100"
                                             />
                                             <button
-                                                onClick={() => handleUpdateQuantity(item.fabricId?._id, item.quantity + 1)}
-                                                disabled={updatingItem === item.fabricId?._id}
+                                                onClick={() => handleUpdateQuantity(item.fabricId?._id || item._id, item.quantity + 1)}
+                                                disabled={updatingItem === (item.fabricId?._id || item._id)}
                                             >
                                                 <FaPlus />
                                             </button>
@@ -273,7 +341,7 @@ const CartPage = () => {
                                         <div className="item-actions">
                                             <button
                                                 className="remove-btn"
-                                                onClick={() => handleRemoveFromCart(item.fabricId?._id)}
+                                                onClick={() => handleRemoveFromCart(item.fabricId?._id || item._id)}
                                             >
                                                 <FaTrash /> Remove
                                             </button>
@@ -322,16 +390,20 @@ const CartPage = () => {
             {showModal && (
                 <div className="modal-overlay">
                     <div className="modal">
-                        <button className="modal-close" onClick={() => setShowModal(false)} disabled={orderProcessing}>
+                        <button 
+                            className="modal-close" 
+                            onClick={() => !orderProcessing && setShowModal(false)}
+                            disabled={orderProcessing}
+                        >
                             &times;
                         </button>
                         <h3 className="modal-heading">
-                            {currentFabric ? `Order ${currentFabric.fabricId?.name}` : "Checkout"}
+                            {currentFabric ? `Order ${currentFabric.fabricId?.name || currentFabric.name}` : "Checkout"}
                         </h3>
 
                         <form onSubmit={userDetails.paymentMethod === "Cash on Delivery" ? handleCashOnDelivery : (e) => e.preventDefault()}>
                             <div className="form-group">
-                                <label>Full Name</label>
+                                <label>Full Name *</label>
                                 <input
                                     type="text"
                                     name="name"
@@ -339,11 +411,12 @@ const CartPage = () => {
                                     value={userDetails.name}
                                     onChange={handleInputChange}
                                     required
+                                    disabled={orderProcessing}
                                 />
                             </div>
 
                             <div className="form-group">
-                                <label>Delivery Address</label>
+                                <label>Delivery Address *</label>
                                 <textarea
                                     name="address"
                                     placeholder="Full delivery address with zip code"
@@ -351,11 +424,12 @@ const CartPage = () => {
                                     onChange={handleInputChange}
                                     required
                                     rows="4"
+                                    disabled={orderProcessing}
                                 />
                             </div>
 
                             <div className="form-group">
-                                <label>Contact Number</label>
+                                <label>Contact Number *</label>
                                 <input
                                     type="tel"
                                     name="contact"
@@ -363,25 +437,30 @@ const CartPage = () => {
                                     value={userDetails.contact}
                                     onChange={handleInputChange}
                                     required
+                                    disabled={orderProcessing}
+                                    pattern="[0-9]{10,15}"
+                                    title="Please enter a valid phone number"
                                 />
                             </div>
 
                             {currentFabric && (
                                 <div className="form-group">
-                                    <label>Quantity</label>
+                                    <label>Quantity *</label>
                                     <input
                                         type="number"
                                         name="quantity"
                                         min="1"
+                                        max="100"
                                         value={userDetails.quantity}
                                         onChange={handleInputChange}
                                         required
+                                        disabled={orderProcessing}
                                     />
                                 </div>
                             )}
 
                             <div className="payment-section">
-                                <h4>Payment Method</h4>
+                                <h4>Payment Method *</h4>
                                 <div className="payment-options">
                                     <label className={`payment-option ${userDetails.paymentMethod === "PayPal" ? "selected" : ""}`}>
                                         <input
@@ -390,6 +469,7 @@ const CartPage = () => {
                                             value="PayPal"
                                             checked={userDetails.paymentMethod === "PayPal"}
                                             onChange={handleInputChange}
+                                            disabled={orderProcessing}
                                         />
                                         <div className="payment-content">
                                             <FaPaypal className="payment-icon" />
@@ -404,6 +484,7 @@ const CartPage = () => {
                                             value="Cash on Delivery"
                                             checked={userDetails.paymentMethod === "Cash on Delivery"}
                                             onChange={handleInputChange}
+                                            disabled={orderProcessing}
                                         />
                                         <div className="payment-content">
                                             <FaMoneyBillWave className="payment-icon" />
@@ -417,17 +498,21 @@ const CartPage = () => {
                                 <h4>Order Summary</h4>
                                 <div className="order-items">
                                     {currentFabric ? (
-                                        <>
-                                            <div className="order-item">
-                                                <span>{currentFabric.fabricId?.name}</span>
-                                                <span>₹{(currentFabric.fabricId?.price * currentFabric.quantity).toFixed(2)}</span>
-                                            </div>
-                                        </>
+                                        <div className="order-item">
+                                            <span>{currentFabric.fabricId?.name || currentFabric.name}</span>
+                                            <span>₹{(
+                                                (currentFabric.fabricId?.price || currentFabric.price) * 
+                                                parseInt(userDetails.quantity)
+                                            ).toFixed(2)}</span>
+                                        </div>
                                     ) : (
                                         cartItems.map(item => (
-                                            <div key={item.fabricId?._id} className="order-item">
-                                                <span>{item.fabricId?.name} (x{item.quantity})</span>
-                                                <span>₹{(item.fabricId?.price * item.quantity).toFixed(2)}</span>
+                                            <div key={item.fabricId?._id || item._id} className="order-item">
+                                                <span>{item.fabricId?.name || item.name} (x{item.quantity})</span>
+                                                <span>₹{(
+                                                    (item.fabricId?.price || item.price) * 
+                                                    item.quantity
+                                                ).toFixed(2)}</span>
                                             </div>
                                         ))
                                     )}
@@ -435,7 +520,10 @@ const CartPage = () => {
                                 <div className="order-total">
                                     <span>Total</span>
                                     <span>₹{currentFabric
-                                        ? (currentFabric.fabricId?.price * currentFabric.quantity).toFixed(2)
+                                        ? (
+                                            (currentFabric.fabricId?.price || currentFabric.price) * 
+                                            parseInt(userDetails.quantity)
+                                        ).toFixed(2)
                                         : total.toFixed(2)}
                                     </span>
                                 </div>
@@ -450,8 +538,9 @@ const CartPage = () => {
                                             onApprove={onPayPalApprove}
                                             onError={(err) => {
                                                 console.error("PayPal error:", err);
-                                                alert("Payment failed. Please try again.");
+                                                alert("Payment failed. Please try again or use another method.");
                                             }}
+                                            disabled={orderProcessing}
                                         />
                                     </PayPalScriptProvider>
                                 </div>

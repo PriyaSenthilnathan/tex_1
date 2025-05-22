@@ -11,72 +11,41 @@ body {
   background-color: #f4f4f4;
 }
 
-/* Navbar container */
+/* Navbar */
 .navbar {
   display: flex;
-  justify-content: space-between; /* space between logo and links */
+  justify-content: space-between;
   align-items: center;
+  padding: 10px 30px;
   background-color: white;
-  padding: 15px 30px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  width: 100%;  /* full width */
-  position: fixed; /* fix to top */
-  top: 0;
-  left: 0;
-  z-index: 1000;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
-/* Website name/logo */
-.website-name {
-  font-weight: bold;
-  font-size: 24px;
-  color: #2874f0;
+.navbar-left {
   display: flex;
   align-items: center;
 }
 
-.website-name img {
-  width: 40px;
+.logo {
   height: 40px;
   margin-right: 10px;
-  border-radius: 50%;
 }
 
-/* Navigation links container */
-.nav-links {
-  display: flex;
-  gap: 20px;
-}
-
-/* Each nav link */
-.nav-links a {
-  text-decoration: none;
-  color: #2874f0;
+.brand-name {
+  font-size: 22px;
   font-weight: bold;
-  display: flex;
-  align-items: center;
-  font-size: 16px;
-  padding: 6px 10px;
-  border-radius: 6px;
-  transition: color 0.3s ease, transform 0.2s ease;
+  color: #2c3e50;
 }
 
-.nav-links a:hover {
-  color: #fb641b;
-  background-color: #fef3e7;
-  transform: scale(1.05);
+.navbar-right a {
+  margin-left: 20px;
+  text-decoration: none;
+  color: #007bff;
+  font-weight: 500;
 }
 
-/* Icons inside nav links */
-.nav-links svg {
-  margin-right: 6px;
-  font-size: 18px;
-  transition: color 0.3s ease;
-}
-
-/* Hover icon color change */
-.nav-links a:hover svg {
-  color: #fb641b;
+.navbar-right a:hover {
+  text-decoration: underline;
 }
 
 /* Page background */
@@ -84,14 +53,12 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  flex-direction: column; /* stack vertically */
   height: 100vh;
-  width: 100vw;
   background-color: #f0f0f0;
-  padding-top: 70px; /* space for fixed navbar */
   position: relative;
 }
 
+/* Close button inside login container */
 /* Close button style */
 .page-background span {
   position: absolute;
@@ -104,12 +71,13 @@ body {
   transition: color 0.3s ease;
 }
 
-.page-background span:hover {
-  color: #f1c40f; /* Gold on hover */
+.login-container .close-button:hover {
+  color: #f1c40f;
 }
 
 /* Form container */
 .login-container {
+  position: relative;
   background-color: white;
   padding: 40px;
   border-radius: 10px;
@@ -117,14 +85,12 @@ body {
   width: 100%;
   max-width: 400px;
   text-align: center;
-  margin-top: 0px; /* or 10px if you want a small gap */
-  transform: translateY(-20px); /* move container 20px upwards */
+  margin-top: -40px;
 }
-
 
 .login-container h1 {
   margin-bottom: 20px;
-  color: #2c3e50; /* Dark blue for headings */
+  color: #2c3e50;
   font-size: 24px;
 }
 
@@ -139,24 +105,26 @@ body {
 }
 
 .login-container input:focus {
-  border-color: #f1c40f; /* Gold for focus */
+  border-color: #f1c40f;
   outline: none;
 }
 
+/* Primary button styles */
 .login-container button {
   width: 100%;
   padding: 12px;
-  background-color: rgba(143, 197, 82, 0.77); /* Green for buttons */
-  color: #2c3e50; /* Dark blue text */
+  background-color: rgba(143, 197, 82, 0.77);
+  color: #2c3e50;
   border: none;
   border-radius: 5px;
   font-size: 16px;
   cursor: pointer;
   transition: background-color 0.3s;
+  margin: 10px 0;
 }
 
 .login-container button:hover {
-  background-color: #f1c40f;
+  background-color: #e0b30f;
 }
 
 .login-container button:disabled {
@@ -166,18 +134,20 @@ body {
 
 /* Google Sign-In Button */
 .google-sign-in {
+  width: 100%;
+  padding: 12px;
   background-color: #ffffff;
   color: #2c3e50;
   border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  margin-top: 20px;
-  cursor: pointer;
-  padding: 10px;
-  border-radius: 5px;
-  font-weight: 600;
+  margin: 10px 0;
 }
 
 .google-sign-in:hover {
@@ -185,92 +155,33 @@ body {
 }
 
 .google-sign-in img {
-  width: 35px;
-  height: 35px;
+  width: 20px;
+  height: 20px;
 }
 
 /* Links */
 .login-container p {
   margin-top: 15px;
   color: #666;
-  font-size: 14px;
 }
 
-.login-container button + button {
-  color: rgb(146, 182, 248); /* Light blue for links */
+.login-container .register-button {
+  color: rgb(146, 182, 248);
   background: none;
   border: none;
   font-size: 14px;
   cursor: pointer;
   padding: 0;
-}
-
-.login-container button + button:hover {
-  text-decoration: underline;
-}
-
-/* Error message style */
-.error-message {
-  color: red;
-  margin-bottom: 10px;
-  font-size: 14px;
-}
-
-/* Remove absolute positioning from outside container */
-.page-background span {
-  position: static; /* or just remove position */
-  cursor: pointer;
-  font-size: 30px;
-  color: #2c3e50;
-  transition: color 0.3s ease;
-  align-self: flex-end; /* align to right inside flex container */
-  margin-bottom: 10px;
-}
-
-/* Place login-container as flex column so span aligns right */
-.login-container {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  position: relative;
-  background-color: white;
-  padding: 40px 40px 40px 40px; /* keep padding */
-  border-radius: 10px;
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 400px;
-  text-align: center;
-}
-
-/* Move cancel button to top right inside login container */
-.login-container span {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  cursor: pointer;
-  font-size: 30px;
-  color: #2c3e50;
-  transition: color 0.3s ease;
-}
-
-.login-container span:hover {
-  color: #f1c40f;
-}
-
-.login-container .register-button {
-  color: #2874f0; /* Blue color to match your theme */
-  background: none;
-  border: none;
-  font-size: 14px;
-  cursor: pointer;
-  padding: 5px 10px;
-  border-radius: 4px;
-  font-weight: bold;
-  transition: all 0.3s ease;
   margin-left: 5px;
 }
 
 .login-container .register-button:hover {
-  background-color: #f0f7ff; /* Light blue background on hover */
   text-decoration: underline;
+}
+
+/* Error message style */
+.login-container .error-message {
+  color: red;
+  margin-bottom: 10px;
+  font-size: 14px;
 }

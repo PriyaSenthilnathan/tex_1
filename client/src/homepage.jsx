@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FaUser, FaShoppingCart, FaHeart } from 'react-icons/fa';
 import Slider from 'react-slick';
@@ -8,28 +8,24 @@ import 'react-toastify/dist/ReactToastify.css';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import './home.css';
-import fab1 from '/src/assets/fab1.jpg';
-import fab2 from '/src/assets/fab2.jpg';
-import fab3 from '/src/assets/fab3.jpg';
 
 const carouselImages = [
   {
     id: 1,
-    src: fab1,
+    src: '/src/assets/fab1.jpg',
     alt: 'Image 1 description',
   },
   {
     id: 2,
-    src: fab2,
+    src: '/src/assets/fab2.jpg',
     alt: 'Image 2 description',
   },
   {
     id: 3,
-    src: fab3,
+    src: '/src/assets/fab3.jpg',
     alt: 'Image 3 description',
   },
 ];
-
 
 const categories = [
   "Cotton",
@@ -40,65 +36,15 @@ const categories = [
   "Wool",
   "Nylon",
   "Chiffon",
-  "Banarasi Silk",
+  "Spandex",
   "Velvet"
-];
-
-const products = [
-  {
-    id: 1,
-    name: 'Silk Cotton Saree',
-    price: '₹1,299',
-    image: 'https://vannamayil.com/cdn/shop/products/Korasilkcottontowerkorvaikottanchisaree_31.jpg?v=1659505292&width=1946',
-    description: 'Pure silk cotton blend with traditional patterns',
-    category: 'Silk'
-  },
-  {
-    id: 2,
-    name: 'Linen Dress Material',
-    price: '₹899',
-    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-PgRQE5JWEV7HUxoZ5Gw6BZ7G6bC5WwU-EA&s',
-    description: 'Premium linen fabric for comfortable dresses',
-    category: 'Linen'
-  },
-  {
-    id: 3,
-    name: 'Rayon',
-    price: '₹749',
-    image: 'https://www.sarojfabrics.com/pub/media/catalog/product/cache/e461f6a7c3abe4058405e5b51e40efd3/s/f/sf10444a.jpg',
-    description: 'Soft cotton perfect for summer kurtas',
-    category: 'Rayon'
-  },
-  {
-    id: 4,
-    name: 'Designer Chiffon',
-    price: '₹1,599',
-    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTwAka7YMc3HQ8wFbWap08mSkXBYNP6M_iuyg&s',
-    description: 'Elegant chiffon with designer prints',
-    category: 'Chiffon'
-  },
-  {
-    id: 5,
-    name: 'Woolen Suiting',
-    price: '₹2,199',
-    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQc88wFk36kNDrdcQaw-qQxP4HIy7N7GhIdUg&s',
-    description: 'Premium wool blend for winter wear',
-    category: 'Wool'
-  },
-  {
-    id: 6,
-    name: 'Banarasi Silk',
-    price: '₹3,499',
-    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSTD7r7dHpwOONscSHTTuITZZ-aI5QGZo5ifg&s',
-    description: 'Authentic Banarasi silk with gold zari work',
-    category: 'Banarasi Silk'
-  }
 ];
 
 const HomePage = () => {
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [products, setProducts] = useState([]);
 
-  const user = JSON.parse(localStorage.getItem("user")); // Adjust per your auth
+  const user = JSON.parse(localStorage.getItem("user"));
 
   const carouselSettings = {
     dots: true,
@@ -111,7 +57,17 @@ const HomePage = () => {
     arrows: false
   };
 
-  // Category checkbox toggle
+  useEffect(() => {
+    // Fetch products from backend
+    axios.get("http://localhost:5000/fabrics")
+      .then(res => {
+        setProducts(res.data);
+      })
+      .catch(err => {
+        console.error("Error fetching fabrics:", err);
+      });
+  }, []);
+
   const handleCategoryChange = (category) => {
     if (selectedCategories.includes(category)) {
       setSelectedCategories(selectedCategories.filter(c => c !== category));
@@ -120,12 +76,10 @@ const HomePage = () => {
     }
   };
 
-  // Filter products by selected categories or show all if none selected
   const filteredProducts = selectedCategories.length === 0
     ? products
     : products.filter(product => selectedCategories.includes(product.category));
 
-  // Add to cart API call
   const handleAddToCart = async (productId) => {
     if (!user || user.role !== 'user') {
       toast.warning("Please login as a user to add to cart");
@@ -143,7 +97,6 @@ const HomePage = () => {
     }
   };
 
-  // Add to favorites API call
   const handleAddToFavorites = async (productId) => {
     if (!user || user.role !== 'user') {
       toast.warning("Please login as a user to add to favorites");
@@ -177,10 +130,9 @@ const HomePage = () => {
       {/* Carousel */}
       <div className="carousel-container">
         <Slider {...carouselSettings}>
-          {carouselImages.map((image) => (
+          {carouselImages.map(image => (
             <div key={image.id} className="carousel-slide">
               <img src={image.src} alt={image.alt} className="carousel-image" />
-              <div className="carousel-caption">{image.caption}</div>
             </div>
           ))}
         </Slider>
@@ -214,10 +166,10 @@ const HomePage = () => {
         {filteredProducts.length === 0 ? (
           <p className="no-products">No products found for selected categories.</p>
         ) : (
-          filteredProducts.map((product) => (
-            <div key={product.id} className="product-card">
+          filteredProducts.map(product => (
+            <div key={product._id} className="product-card">
               <img
-                src={product.image}
+                src={product.imageUrl || 'https://i.imgur.com/6Q8Z3Ym.jpg'}
                 alt={product.name}
                 className="product-image"
                 onError={(e) => {
@@ -226,18 +178,17 @@ const HomePage = () => {
               />
               <div className="product-info">
                 <h3>{product.name}</h3>
-                <p className="product-price">{product.price}</p>
-                <p className="product-description">{product.description}</p>
+                <p className="product-price">₹{product.price} per meter</p>
                 <div className="button-container">
                   <button
                     className="add-to-cart-btn"
-                    onClick={() => handleAddToCart(product.id)}
+                    onClick={() => handleAddToCart(product._id)}
                   >
                     Add to Cart
                   </button>
                   <FaHeart
                     className="fav-icon"
-                    onClick={() => handleAddToFavorites(product.id)}
+                    onClick={() => handleAddToFavorites(product._id)}
                     title="Add to favorites"
                     style={{ cursor: 'pointer' }}
                   />
@@ -247,6 +198,8 @@ const HomePage = () => {
           ))
         )}
       </div>
+
+      <ToastContainer />
     </div>
   );
 };

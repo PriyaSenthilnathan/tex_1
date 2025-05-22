@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
-import { FaSignOutAlt, FaHeart, FaShoppingCart } from "react-icons/fa";
+import { FaSignOutAlt } from "react-icons/fa";
 import "./FavouritesPage.css";
 import "./LogoutButton.css";
 
@@ -15,7 +15,7 @@ const FavoritesPage = () => {
     name: "",
     address: "",
     contact: "",
-    quantity: "1",
+    quantity: 1,
     paymentMethod: "Cash on Delivery",
   });
 
@@ -33,10 +33,10 @@ const FavoritesPage = () => {
       try {
         setLoading(true);
         const response = await axios.get(`http://localhost:5000/favorites`, {
-          params: { email: userEmail }
+          params: { email: userEmail },
         });
 
-        setFavorites(response.data.map(fav => fav.fabricId));
+        setFavorites(response.data.map((fav) => fav.fabricId));
         setError(null);
       } catch (error) {
         console.error("Error fetching favorites:", error);
@@ -53,10 +53,10 @@ const FavoritesPage = () => {
   const handleRemoveFavorite = async (fabricId) => {
     try {
       await axios.delete("http://localhost:5000/favorites", {
-        params: { email: userEmail, fabricId }
+        params: { email: userEmail, fabricId },
       });
 
-      setFavorites(prev => prev.filter(f => f._id !== fabricId));
+      setFavorites((prev) => prev.filter((f) => f?._id !== fabricId));
     } catch (error) {
       console.error("Error removing favorite:", error);
       alert("Failed to remove from favorites");
@@ -64,13 +64,16 @@ const FavoritesPage = () => {
   };
 
   const handleOrder = (fabric) => {
-    navigate("/order", { state: { fabric } });
+    setCurrentFabric(fabric);
+    setShowModal(true);
   };
-
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setUserDetails(prev => ({ ...prev, [name]: value }));
+    setUserDetails((prev) => ({
+      ...prev,
+      [name]: name === "quantity" ? (value === "" ? "" : Number(value)) : value,
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -96,7 +99,7 @@ const FavoritesPage = () => {
         name: "",
         address: "",
         contact: "",
-        quantity: "1",
+        quantity: 1,
         paymentMethod: "Cash on Delivery",
       });
     } catch (error) {
@@ -133,7 +136,9 @@ const FavoritesPage = () => {
         <nav className="nav-links">
           <Link to="/UserDashboard">Home</Link>
           <Link to="/search-fabrics">Fabrics</Link>
-          <Link to="/favorites" className="active">Favourites</Link>
+          <Link to="/favorites" className="active">
+            Favourites
+          </Link>
           <Link to="/cart">Cart</Link>
           <Link to="/orders">My Orders</Link>
           <Link to="/contact">Contact</Link>
@@ -155,35 +160,42 @@ const FavoritesPage = () => {
           </div>
         ) : (
           <div className="fabrics-grid">
-            {favorites.map((fabric) => (
-              <div key={fabric._id} className="fabric-card">
-                <img
-                  src={fabric.imageUrl || "/default-fabric.jpg"}
-                  alt={fabric.name}
-                  className="fabric-image"
-                />
-                <div className="fabric-info">
-                  <h3>{fabric.name}</h3>
-                  <p><strong>Color:</strong> {fabric.color}</p>
-                  <p><strong>Price:</strong> ₹{fabric.price} per meter</p>
-                  <p className="fabric-description"><strong>Description:</strong>{fabric.description}</p>
+            {favorites.map((fabric) => {
+              if (!fabric) return null; // Skip null or undefined fabric
+
+              return (
+                <div key={fabric._id} className="fabric-card">
+                  <img
+                    src={fabric.imageUrl || "/default-fabric.jpg"}
+                    alt={fabric.name || "Fabric Image"}
+                    className="fabric-image"
+                  />
+                  <div className="fabric-info">
+                    <h3>{fabric.name || "No Name"}</h3>
+                    <p>
+                      <strong>Color:</strong> {fabric.color || "N/A"}
+                    </p>
+                    <p>
+                      <strong>Price:</strong> ₹{fabric.price ?? "N/A"} per meter
+                    </p>
+                  </div>
+                  <div className="action-buttons">
+                    <button
+                      onClick={() => handleRemoveFavorite(fabric._id)}
+                      className="remove-button"
+                    >
+                      Remove
+                    </button>
+                    <button
+                      onClick={() => handleOrder(fabric)}
+                      className="order-button"
+                    >
+                      Order
+                    </button>
+                  </div>
                 </div>
-                <div className="action-buttons">
-                  <button
-                    onClick={() => handleRemoveFavorite(fabric._id)}
-                    className="remove-button"
-                  >
-                    Remove
-                  </button>
-                  <button
-                    onClick={() => handleOrder(fabric)}
-                    className="order-button"
-                  >
-                    Order
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -194,8 +206,11 @@ const FavoritesPage = () => {
             <div className="modal-header">
               <h3>Order {currentFabric.name}</h3>
               <div className="fabric-details">
-                <span className="fabric-color" style={{ backgroundColor: currentFabric.color.toLowerCase() }}></span>
-                <span>Color: {currentFabric.color}</span>
+                <span
+                  className="fabric-color"
+                  style={{ backgroundColor: currentFabric.color?.toLowerCase() || "#ccc" }}
+                ></span>
+                <span>Color: {currentFabric.color || "N/A"}</span>
                 <span>₹{currentFabric.price} per meter</span>
               </div>
             </div>
@@ -253,7 +268,12 @@ const FavoritesPage = () => {
                   <div className="quantity-controls">
                     <button
                       type="button"
-                      onClick={() => setUserDetails({ ...userDetails, quantity: Math.max(1, userDetails.quantity - 1) })}
+                      onClick={() =>
+                        setUserDetails((prev) => ({
+                          ...prev,
+                          quantity: Math.max(1, prev.quantity - 1),
+                        }))
+                      }
                       className="quantity-btn"
                     >
                       −
@@ -263,21 +283,22 @@ const FavoritesPage = () => {
                       name="quantity"
                       min="1"
                       value={userDetails.quantity}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        if (value === '' || /^[1-9]\d*$/.test(value)) {
-                          setUserDetails({
-                            ...userDetails,
-                            quantity: value === '' ? 1 : parseInt(value)
-                          });
-                        }
-                      }}
+                      onChange={handleInputChange}
                       className="quantity-input"
-                      style={{ width: `${Math.max(2, userDetails.quantity.toString().length) * 10 + 20}px` }}
+                      style={{
+                        width:
+                          Math.max(2, userDetails.quantity.toString().length) * 10 +
+                          20,
+                      }}
                     />
                     <button
                       type="button"
-                      onClick={() => setUserDetails({ ...userDetails, quantity: (parseInt(userDetails.quantity) + 1) })}
+                      onClick={() =>
+                        setUserDetails((prev) => ({
+                          ...prev,
+                          quantity: prev.quantity + 1,
+                        }))
+                      }
                       className="quantity-btn"
                     >
                       +
@@ -291,43 +312,39 @@ const FavoritesPage = () => {
                     <span>₹{currentFabric.price}</span>
                   </div>
                   <div className="price-row">
-                    <span>Quantity</span>
-                    <span>{userDetails.quantity} m</span>
-                  </div>
-                  <div className="price-row total">
-                    <span>Total Amount</span>
+                    <span>Total Price</span>
                     <span>₹{currentFabric.price * userDetails.quantity}</span>
                   </div>
                 </div>
-              </div>
 
-              <div className="form-section">
-                <h4 className="section-title">Payment Method</h4>
-                <div className="payment-options">
-                  {["Cash on Delivery", "Credit Card", "Debit Card"].map(method => (
-                    <label key={method} className={`payment-option ${userDetails.paymentMethod === method ? 'selected' : ''}`}>
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value={method}
-                        checked={userDetails.paymentMethod === method}
-                        onChange={handleInputChange}
-                      />
-                      <div className="payment-icon">
-                        {method === "Cash on Delivery" ? "💰" : method === "Credit Card" ? "💳" : "🏦"}
-                      </div>
-                      <span>{method}</span>
-                    </label>
-                  ))}
+                <div className="payment-method-section">
+                  <label htmlFor="paymentMethod" className="payment-method-label">
+                    Select Payment Method
+                  </label>
+                  <select
+                    id="paymentMethod"
+                    name="paymentMethod"
+                    value={userDetails.paymentMethod}
+                    onChange={handleInputChange}
+                    className="payment-select"
+                  >
+                    <option value="Cash on Delivery">Cash on Delivery</option>
+                    <option value="Online Payment">Online Payment</option>
+                    <option value="UPI">UPI</option>
+                  </select>
                 </div>
               </div>
 
-              <div className="form-actions">
-                <button type="button" className="cancel-btn" onClick={() => setShowModal(false)}>
-                  Cancel
+              <div className="modal-footer">
+                <button type="submit" className="submit-order-button">
+                  Place Order
                 </button>
-                <button type="submit" className="submit-btn">
-                  Place Order - ₹{currentFabric.price * userDetails.quantity}
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="cancel-order-button"
+                >
+                  Cancel
                 </button>
               </div>
             </form>
