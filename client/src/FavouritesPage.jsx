@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { FaSignOutAlt } from "react-icons/fa";
+import Payment from "./Payment.jsx";
 import "./FavouritesPage.css";
 import "./LogoutButton.css";
 
@@ -201,156 +202,34 @@ const FavoritesPage = () => {
       </div>
 
       {showModal && currentFabric && (
-        <div className="modal-overlay">
-          <div className="modal-container">
-            <div className="modal-header">
-              <h3>Order {currentFabric.name}</h3>
-              <div className="fabric-details">
-                <span
-                  className="fabric-color"
-                  style={{ backgroundColor: currentFabric.color?.toLowerCase() || "#ccc" }}
-                ></span>
-                <span>Color: {currentFabric.color || "N/A"}</span>
-                <span>₹{currentFabric.price} per meter</span>
-              </div>
-            </div>
-
-            <form onSubmit={handleSubmit} className="order-form">
-              <div className="form-section">
-                <h4 className="section-title">Shipping Details</h4>
-                <div className="form-group">
-                  <label>
-                    <input
-                      type="text"
-                      name="name"
-                      placeholder="Full Name"
-                      value={userDetails.name}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </label>
-                </div>
-
-                <div className="form-group">
-                  <label>
-                    <textarea
-                      name="address"
-                      placeholder="Complete Address"
-                      value={userDetails.address}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </label>
-                </div>
-
-                <div className="form-group">
-                  <label>Contact Number</label>
-                  <div className="phone-input-container">
-                    <span className="country-code">+91</span>
-                    <input
-                      type="tel"
-                      name="contact"
-                      placeholder="9876543210"
-                      value={userDetails.contact}
-                      onChange={handleInputChange}
-                      required
-                      pattern="[0-9]{10}"
-                      title="Please enter a 10-digit phone number"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="form-section">
-                <h4 className="section-title">Order Summary</h4>
-                <div className="quantity-selector">
-                  <label>Quantity (meters)</label>
-                  <div className="quantity-controls">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setUserDetails((prev) => ({
-                          ...prev,
-                          quantity: Math.max(1, prev.quantity - 1),
-                        }))
-                      }
-                      className="quantity-btn"
-                    >
-                      −
-                    </button>
-                    <input
-                      type="number"
-                      name="quantity"
-                      min="1"
-                      value={userDetails.quantity}
-                      onChange={handleInputChange}
-                      className="quantity-input"
-                      style={{
-                        width:
-                          Math.max(2, userDetails.quantity.toString().length) * 10 +
-                          20,
-                      }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setUserDetails((prev) => ({
-                          ...prev,
-                          quantity: prev.quantity + 1,
-                        }))
-                      }
-                      className="quantity-btn"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-
-                <div className="price-summary">
-                  <div className="price-row">
-                    <span>Price per meter</span>
-                    <span>₹{currentFabric.price}</span>
-                  </div>
-                  <div className="price-row">
-                    <span>Total Price</span>
-                    <span>₹{currentFabric.price * userDetails.quantity}</span>
-                  </div>
-                </div>
-
-                <div className="payment-method-section">
-                  <label htmlFor="paymentMethod" className="payment-method-label">
-                    Select Payment Method
-                  </label>
-                  <select
-                    id="paymentMethod"
-                    name="paymentMethod"
-                    value={userDetails.paymentMethod}
-                    onChange={handleInputChange}
-                    className="payment-select"
-                  >
-                    <option value="Cash on Delivery">Cash on Delivery</option>
-                    <option value="Online Payment">Online Payment</option>
-                    <option value="UPI">UPI</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="modal-footer">
-                <button type="submit" className="submit-order-button">
-                  Place Order
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="cancel-order-button"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+  <div className="modal-overlay">
+    <div className="modal-container">
+      <Payment
+        items={[currentFabric]}
+        isSingleProduct={true}
+        defaultQuantity={userDetails.quantity}
+        onSuccess={async (orderPayload) => {
+          try {
+            await axios.post("http://localhost:5000/orders", orderPayload[0]);
+            alert("Order placed successfully!");
+            setShowModal(false);
+            setUserDetails({
+              name: "",
+              address: "",
+              contact: "",
+              quantity: 1,
+              paymentMethod: "Cash on Delivery",
+            });
+          } catch (error) {
+            console.error("Error placing order:", error);
+            throw error; // This will be caught by the Payment component
+          }
+        }}
+        onCancel={() => setShowModal(false)}
+      />
+    </div>
+  </div>
+)}
     </div>
   );
 };

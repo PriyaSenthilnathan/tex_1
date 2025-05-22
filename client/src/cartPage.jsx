@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { FaSignOutAlt, FaTrash, FaShoppingCart, FaMinus, FaPlus } from "react-icons/fa";
-import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
-import { FaPaypal, FaMoneyBillWave } from 'react-icons/fa';
+import Payment from "./Payment.jsx";
 import "./cartPage.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
@@ -49,7 +48,7 @@ const CartPage = () => {
                         'Content-Type': 'application/json',
                     }
                 });
-                
+
                 // Handle different response structures
                 if (response.data && Array.isArray(response.data)) {
                     setCartItems(response.data);
@@ -81,7 +80,7 @@ const CartPage = () => {
     // Cart operations
     const handleRemoveFromCart = async (fabricId) => {
         if (!window.confirm("Are you sure you want to remove this item?")) return;
-        
+
         try {
             await axios.delete(`${API_BASE_URL}/cart`, {
                 params: { email: userEmail, fabricId },
@@ -110,7 +109,7 @@ const CartPage = () => {
                     'Content-Type': 'application/json',
                 }
             });
-            
+
             setCartItems(prev => prev.map(item =>
                 item.fabricId?._id === fabricId ? { ...item, quantity: newQuantity } : item
             ));
@@ -149,8 +148,8 @@ const CartPage = () => {
                 userContact: userDetails.contact,
                 quantity: currentFabric ? parseInt(userDetails.quantity) : item.quantity,
                 paymentMethod: userDetails.paymentMethod,
-                totalPrice: (item.fabricId?.price || item.price) * 
-                          (currentFabric ? parseInt(userDetails.quantity) : item.quantity),
+                totalPrice: (item.fabricId?.price || item.price) *
+                    (currentFabric ? parseInt(userDetails.quantity) : item.quantity),
                 ...(paypalOrderId && { paypalOrderId })
             }));
 
@@ -179,7 +178,7 @@ const CartPage = () => {
                     'Content-Type': 'application/json',
                 }
             });
-            
+
             // Handle response as before
             if (response.data && Array.isArray(response.data)) {
                 setCartItems(response.data);
@@ -305,9 +304,9 @@ const CartPage = () => {
                         <div className="cart-items">
                             {cartItems.map(item => (
                                 <div key={item.fabricId?._id || item._id} className="cart-item">
-                                    <img 
-                                        src={item.fabricId?.imageUrl || item.imageUrl} 
-                                        alt={item.fabricId?.name || item.name} 
+                                    <img
+                                        src={item.fabricId?.imageUrl || item.imageUrl}
+                                        alt={item.fabricId?.name || item.name}
                                         onError={(e) => {
                                             e.target.onerror = null;
                                             e.target.src = "https://via.placeholder.com/150?text=No+Image";
@@ -374,7 +373,7 @@ const CartPage = () => {
                             <button
                                 className="checkout-btn"
                                 onClick={() => {
-                                    setCurrentFabric(null); 
+                                    setCurrentFabric(null);
                                     setShowModal(true);
                                 }}
                                 disabled={cartItems.length === 0}
@@ -390,190 +389,64 @@ const CartPage = () => {
             {showModal && (
                 <div className="modal-overlay">
                     <div className="modal">
-                        <button 
-                            className="modal-close" 
-                            onClick={() => !orderProcessing && setShowModal(false)}
-                            disabled={orderProcessing}
-                        >
-                            &times;
-                        </button>
-                        <h3 className="modal-heading">
-                            {currentFabric ? `Order ${currentFabric.fabricId?.name || currentFabric.name}` : "Checkout"}
-                        </h3>
+                        <div className="payment-modal-content"> {/* New wrapper div */}
+                            <button
+                                className="modal-close"
+                                onClick={() => !orderProcessing && setShowModal(false)}
+                                disabled={orderProcessing}
+                            >
+                                &times;
+                            </button>
 
-                        <form onSubmit={userDetails.paymentMethod === "Cash on Delivery" ? handleCashOnDelivery : (e) => e.preventDefault()}>
-                            <div className="form-group">
-                                <label>Full Name *</label>
-                                <input
-                                    type="text"
-                                    name="name"
-                                    placeholder="Your full name"
-                                    value={userDetails.name}
-                                    onChange={handleInputChange}
-                                    required
-                                    disabled={orderProcessing}
-                                />
-                            </div>
+                            <h2 className="modal-title">Complete Your Order</h2>
 
-                            <div className="form-group">
-                                <label>Delivery Address *</label>
-                                <textarea
-                                    name="address"
-                                    placeholder="Full delivery address with zip code"
-                                    value={userDetails.address}
-                                    onChange={handleInputChange}
-                                    required
-                                    rows="4"
-                                    disabled={orderProcessing}
-                                />
-                            </div>
+                            <Payment
+                                items={currentFabric ? [currentFabric] : cartItems}
+                                isSingleProduct={!!currentFabric}
+                                defaultQuantity={currentFabric ? currentFabric.quantity : 1}
+                                onSuccess={async (orderPayload) => {
+                                    try {
+                                        // Create orders
+                                        await axios.post(`${API_BASE_URL}/orders/bulk`, { orders: orderPayload });
 
-                            <div className="form-group">
-                                <label>Contact Number *</label>
-                                <input
-                                    type="tel"
-                                    name="contact"
-                                    placeholder="Phone number for delivery updates"
-                                    value={userDetails.contact}
-                                    onChange={handleInputChange}
-                                    required
-                                    disabled={orderProcessing}
-                                    pattern="[0-9]{10,15}"
-                                    title="Please enter a valid phone number"
-                                />
-                            </div>
+                                        // Clear cart
+                                        await axios.delete(`${API_BASE_URL}/cart/bulk`, {
+                                            data: {
+                                                email: userEmail,
+                                                fabricIds: orderPayload.map(item => item.fabricId)
+                                            }
+                                        });
 
-                            {currentFabric && (
-                                <div className="form-group">
-                                    <label>Quantity *</label>
-                                    <input
-                                        type="number"
-                                        name="quantity"
-                                        min="1"
-                                        max="100"
-                                        value={userDetails.quantity}
-                                        onChange={handleInputChange}
-                                        required
-                                        disabled={orderProcessing}
-                                    />
-                                </div>
-                            )}
+                                        // Refresh cart
+                                        const response = await axios.get(`${API_BASE_URL}/cart`, {
+                                            params: { email: userEmail }
+                                        });
 
-                            <div className="payment-section">
-                                <h4>Payment Method *</h4>
-                                <div className="payment-options">
-                                    <label className={`payment-option ${userDetails.paymentMethod === "PayPal" ? "selected" : ""}`}>
-                                        <input
-                                            type="radio"
-                                            name="paymentMethod"
-                                            value="PayPal"
-                                            checked={userDetails.paymentMethod === "PayPal"}
-                                            onChange={handleInputChange}
-                                            disabled={orderProcessing}
-                                        />
-                                        <div className="payment-content">
-                                            <FaPaypal className="payment-icon" />
-                                            <span>PayPal</span>
-                                        </div>
-                                    </label>
+                                        if (response.data && Array.isArray(response.data)) {
+                                            setCartItems(response.data);
+                                        } else if (response.data?.data && Array.isArray(response.data.data)) {
+                                            setCartItems(response.data.data);
+                                        } else {
+                                            setCartItems([]);
+                                        }
 
-                                    <label className={`payment-option ${userDetails.paymentMethod === "Cash on Delivery" ? "selected" : ""}`}>
-                                        <input
-                                            type="radio"
-                                            name="paymentMethod"
-                                            value="Cash on Delivery"
-                                            checked={userDetails.paymentMethod === "Cash on Delivery"}
-                                            onChange={handleInputChange}
-                                            disabled={orderProcessing}
-                                        />
-                                        <div className="payment-content">
-                                            <FaMoneyBillWave className="payment-icon" />
-                                            <span>Cash on Delivery</span>
-                                        </div>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div className="order-summary-section">
-                                <h4>Order Summary</h4>
-                                <div className="order-items">
-                                    {currentFabric ? (
-                                        <div className="order-item">
-                                            <span>{currentFabric.fabricId?.name || currentFabric.name}</span>
-                                            <span>₹{(
-                                                (currentFabric.fabricId?.price || currentFabric.price) * 
-                                                parseInt(userDetails.quantity)
-                                            ).toFixed(2)}</span>
-                                        </div>
-                                    ) : (
-                                        cartItems.map(item => (
-                                            <div key={item.fabricId?._id || item._id} className="order-item">
-                                                <span>{item.fabricId?.name || item.name} (x{item.quantity})</span>
-                                                <span>₹{(
-                                                    (item.fabricId?.price || item.price) * 
-                                                    item.quantity
-                                                ).toFixed(2)}</span>
-                                            </div>
-                                        ))
-                                    )}
-                                </div>
-                                <div className="order-total">
-                                    <span>Total</span>
-                                    <span>₹{currentFabric
-                                        ? (
-                                            (currentFabric.fabricId?.price || currentFabric.price) * 
-                                            parseInt(userDetails.quantity)
-                                        ).toFixed(2)
-                                        : total.toFixed(2)}
-                                    </span>
-                                </div>
-                            </div>
-
-                            {userDetails.paymentMethod === "PayPal" && (
-                                <div className="paypal-button-container">
-                                    <PayPalScriptProvider options={initialOptions}>
-                                        <PayPalButtons
-                                            style={{ layout: "vertical", shape: "pill" }}
-                                            createOrder={createPayPalOrder}
-                                            onApprove={onPayPalApprove}
-                                            onError={(err) => {
-                                                console.error("PayPal error:", err);
-                                                alert("Payment failed. Please try again or use another method.");
-                                            }}
-                                            disabled={orderProcessing}
-                                        />
-                                    </PayPalScriptProvider>
-                                </div>
-                            )}
-
-                            <div className="modal-actions">
-                                <button
-                                    type="button"
-                                    className="cancel-btn"
-                                    onClick={() => setShowModal(false)}
-                                    disabled={orderProcessing}
-                                >
-                                    Cancel
-                                </button>
-
-                                {userDetails.paymentMethod === "Cash on Delivery" && (
-                                    <button
-                                        type="submit"
-                                        className="confirm-btn"
-                                        disabled={orderProcessing}
-                                    >
-                                        {orderProcessing ? (
-                                            <span className="processing">
-                                                <div className="spinner"></div>
-                                                Processing...
-                                            </span>
-                                        ) : (
-                                            "Confirm Order"
-                                        )}
-                                    </button>
-                                )}
-                            </div>
-                        </form>
+                                        alert("Order placed successfully!");
+                                        setShowModal(false);
+                                        setUserDetails({
+                                            name: "",
+                                            address: "",
+                                            contact: "",
+                                            quantity: "1",
+                                            paymentMethod: "PayPal",
+                                        });
+                                    } catch (error) {
+                                        console.error("Error placing order:", error);
+                                        throw error; // This will be caught by the Payment component
+                                    }
+                                }}
+                                onCancel={() => setShowModal(false)}
+                            />
+                        </div>
                     </div>
                 </div>
             )}
